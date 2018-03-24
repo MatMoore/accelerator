@@ -26,7 +26,7 @@ LINK_CLICKS = 'ga:productListClicks'            # Number of times the user click
 LINK_CTR = 'ga:productListCTR'                  # ga:productListClicks / ga:productListViews
 LINK_POSITION = 'ga:productListPosition'        # the position the link appeared in the search results
 CONTENT_ID_OR_PATH = 'ga:productSku'            # the content ID of the link if available, else the path
-
+CLIENT_ID = 'ga:dimension95'                    # the GA client ID
 
 def initialize_analyticsreporting():
     """Initializes an Analytics Reporting API V4 service object.
@@ -115,7 +115,7 @@ def clicks_with_positions(analytics, next_page_token=None):
         'dateRanges': [{'startDate': '2018-01-01', 'endDate': '2018-01-02'}],
         'metrics': [{'expression': LINK_CTR}, {'expression': LINK_IMPRESSIONS}, {'expression': LINK_CLICKS}],
         #'orderBys': [{'fieldName': 'ga:pageViews', 'sortOrder': 'DESCENDING'}],
-        'dimensions': [{'name': CONTENT_ID_OR_PATH}, {'name': LINK_POSITION}, {'name': CUSTOM_VARIABLE_SEARCH_QUERY}],
+        'dimensions': [{'name': CLIENT_ID}, {'name': CONTENT_ID_OR_PATH}, {'name': LINK_POSITION}, {'name': CUSTOM_VARIABLE_SEARCH_QUERY}],
 
         # TODO: explicitly filter by product list
     }
@@ -213,15 +213,10 @@ def write_page_to_csv(response, filename):
 
     outrow.extend(metrics[0]['values'])
 
-    if len(outrow) != 6:
-      import pdb; pdb.set_trace()
     rows.append(outrow)
   
   df = pd.DataFrame(rows, columns=cols)
   df.to_csv(filename)
-  
-  import pdb
-  pdb.set_trace()
 
   return df
 
@@ -233,7 +228,7 @@ def main():
 
     response = clicks_with_positions(analytics)
     print_response(response)
-    write_page_to_csv(response, 'data/clicks_with_positions_2018-01-01_page-0001.csv')
+    write_page_to_csv(response, 'data/client_clicks_with_positions_2018-01-01_page-0001.csv')
 
 
 if __name__ == '__main__':
