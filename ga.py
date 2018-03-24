@@ -127,7 +127,8 @@ def clicks_with_positions(analytics, next_page_token=None):
         body={
             'reportRequests': [
               request_body
-            ]
+            ],
+            'useResourceQuotas': True,
         }
    ).execute()
 
