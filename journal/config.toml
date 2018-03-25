@@ -3,6 +3,9 @@ languageCode = "en-gb"
 title = "Accelerator project journal"
 theme = "Journal"
 
+relativeURLs = true
+CanonifyURLs = true
+
 # Deployment via docs folder for GitHub
 publishDir = "../docs"
 
