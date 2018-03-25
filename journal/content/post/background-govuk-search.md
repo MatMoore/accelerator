@@ -1,7 +1,6 @@
 ---
 title: "How does GOV.UK search work at the moment?"
 date: 2018-03-17T13:26:14Z
-draft: true
 tags: ["Week 0"]
 ---
 The [search functionality](https://github.com/alphagov/rummager) on GOV.UK is built using an open source search engine, [Elasticsearch](https://en.wikipedia.org/wiki/Elasticsearch).

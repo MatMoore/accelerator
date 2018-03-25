@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en-gb">
+
+  <head>
+    <meta charset="utf-8">
+    <meta name="generator" content="Hugo 0.37.1" />
+
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="author" content="">
+    <meta property="og:url" content="http://example.org/post/what-is-this/">
+
+    <title>About this project - Accelerator project journal</title>
+    <meta property="og:title" content="About this project - Accelerator project journal">
+    <meta property="og:type" content="article">
+    <meta name="description" content="">
+
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Code+Pro|Arvo:400,700">
+    <link rel="stylesheet" href="/css/highlight.css">
+    <link rel="stylesheet" href="/css/journal.css">
+    <link href="/index.xml" rel="alternate" type="application/rss+xml" title="Accelerator project journal">
+
+  </head>
+
+  <body>
+    <div class="container">
+
+      <nav class="site-nav">
+        <a href="http://example.org/">Index</a>
+      </nav>
+
+
+  <article class="post">
+    <header class="post-header">
+      <h1 class="post-title">About this project <span class="tag">Week 0</span></h1>
+      <time class="post-date" datetime="2018-03-17 13:26:13 UTC">17 Mar 2018</time>
+
+    </header>
+    
+
+<p>Hi! Over the next 3 months I&rsquo;m going to be spending 1 day a week working on
+a project as part of the government <a href="https://www.gov.uk/government/publications/data-science-accelerator-programme/introduction-to-the-data-science-accelerator">data science accelerator programme</a>. I&rsquo;m encouraged to keep a journal and I thought a blog would be a good way to do it.</p>
+
+<h2 id="background">Background</h2>
+
+<p>I currently work as a software developer on GOV.UK, the website used by
+people in the UK to access government services and information online.</p>
+
+<p>There are about 400,000
+different pages on the site, and this content is published by many different
+departments and agencies.</p>
+
+<p>A lot of the work I&rsquo;ve been involved with has been about how to manage and
+structure all this content so users can find stuff.</p>
+
+<p>Part of that work has been on the <a href="https://www.gov.uk/search?q=yams">search functionality</a>, which is what my project will focus on.</p>
+
+<h2 id="rough-plan">Rough plan</h2>
+
+<p>For this project I want to use historical search logs to understand how to improve the ordering
+of search results so that users see more <strong>relevant</strong> pages quicker (i.e. the documents are helpful to the user that entered the query).</p>
+
+<p>These are my initial thoughts on what I want to do at the start of the project (they may change!)</p>
+
+<ol>
+<li>Given data about what users clicked on, judge the intrinsic relevance of each link displayed on a result page for a query. Prior art: <a href="https://github.com/gds-attic/search-performance-dashboard/blob/master/dashboard/performance.py">Search performance dashboard</a>.</li>
+<li>Build a tool to evaluate how good search result pages are, based on these judgements. This should be something developers can run for an unreleased version of search, with a representative set of queries, so that they can predict performance <em>before</em> deploying the code.</li>
+<li>Explore <a href="https://en.wikipedia.org/wiki/Learning_to_rank">Learning to Rank</a> using the relevance judgements as training data.</li>
+</ol>
+
+<p>My next post gives some <a href="/post/background-govuk-search">background on how GOV.UK search works now</a>.</p>
+
+
+  </article>
+
+
+      <footer class="site-footer">
+        <span itemscope itemtype="http://schema.org/Person">
+          <link itemprop="url" href="http://example.org/">
+          <span itemprop="name"></span>
+
+          <br>
+
+          
+
+          
+
+          
+        </span>
+
+        
+      </footer>
+    </div>
+
+  <script src="/js/highlight.pack.js"></script>
+  <script>hljs.initHighlightingOnLoad();</script>
+
+  </body>
+</html>
+

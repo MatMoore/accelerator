@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Week 0 on Accelerator project journal</title>
+    <link>http://example.org/tags/week-0/</link>
+    <description>Recent content in Week 0 on Accelerator project journal</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-gb</language>
+    <lastBuildDate>Sat, 17 Mar 2018 13:26:14 +0000</lastBuildDate>
+    
+	<atom:link href="http://example.org/tags/week-0/index.xml" rel="self" type="application/rss+xml" />
+    
+    
+    <item>
+      <title>How does GOV.UK search work at the moment?</title>
+      <link>http://example.org/post/background-govuk-search/</link>
+      <pubDate>Sat, 17 Mar 2018 13:26:14 +0000</pubDate>
+      
+      <guid>http://example.org/post/background-govuk-search/</guid>
+      <description>The search functionality on GOV.UK is built using an open source search engine, Elasticsearch.
+In this post I&amp;rsquo;ll explain how GOV.UK search uses elasticsearch to generate search results, and some of the problems with it.
+Indexing Whenever a new document is published, it automatically gets added to a search index. When you index a document, elasticsearch analyses the document&amp;rsquo;s text, which involves lowercasing, stripping out diacretics, breaking it into tokens, stemming words, substituting synonyms etc.</description>
+    </item>
+    
+    <item>
+      <title>About this project</title>
+      <link>http://example.org/post/what-is-this/</link>
+      <pubDate>Sat, 17 Mar 2018 13:26:13 +0000</pubDate>
+      
+      <guid>http://example.org/post/what-is-this/</guid>
+      <description>Hi! Over the next 3 months I&amp;rsquo;m going to be spending 1 day a week working on a project as part of the government data science accelerator programme. I&amp;rsquo;m encouraged to keep a journal and I thought a blog would be a good way to do it.
+Background I currently work as a software developer on GOV.UK, the website used by people in the UK to access government services and information online.</description>
+    </item>
+    
+  </channel>
+</rss>

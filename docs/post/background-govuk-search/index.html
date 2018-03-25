@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en-gb">
+
+  <head>
+    <meta charset="utf-8">
+    <meta name="generator" content="Hugo 0.37.1" />
+
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="author" content="">
+    <meta property="og:url" content="http://example.org/post/background-govuk-search/">
+
+    <title>How does GOV.UK search work at the moment? - Accelerator project journal</title>
+    <meta property="og:title" content="How does GOV.UK search work at the moment? - Accelerator project journal">
+    <meta property="og:type" content="article">
+    <meta name="description" content="">
+
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Code+Pro|Arvo:400,700">
+    <link rel="stylesheet" href="/css/highlight.css">
+    <link rel="stylesheet" href="/css/journal.css">
+    <link href="/index.xml" rel="alternate" type="application/rss+xml" title="Accelerator project journal">
+
+  </head>
+
+  <body>
+    <div class="container">
+
+      <nav class="site-nav">
+        <a href="http://example.org/">Index</a>
+      </nav>
+
+
+  <article class="post">
+    <header class="post-header">
+      <h1 class="post-title">How does GOV.UK search work at the moment? <span class="tag">Week 0</span></h1>
+      <time class="post-date" datetime="2018-03-17 13:26:14 UTC">17 Mar 2018</time>
+
+    </header>
+    
+
+<p>The <a href="https://github.com/alphagov/rummager">search functionality</a> on GOV.UK is built using an open source search engine, <a href="https://en.wikipedia.org/wiki/Elasticsearch">Elasticsearch</a>.</p>
+
+<p>In this post I&rsquo;ll explain how GOV.UK search uses elasticsearch to generate search results, and some of the problems with it.</p>
+
+<h2 id="indexing">Indexing</h2>
+
+<p>Whenever a new document is published, it automatically gets added to a search index. When you index a document, elasticsearch <a href="https://www.elastic.co/guide/en/elasticsearch/reference/current/analysis.html">analyses the document&rsquo;s text</a>, which involves lowercasing, stripping out diacretics, breaking it into tokens, stemming words, substituting synonyms etc.</p>
+
+<p>We do this for the main text of the page, <code>indexable_content</code> plus other document fields like the <code>title</code> and <code>description</code>.</p>
+
+<h2 id="querying">Querying</h2>
+
+<p>When you type in a search term, we run an elasticsearch query to retrieve
+matching documents and rank them in a particular order.</p>
+
+<p>Elasticsearch uses the <a href="https://www.elastic.co/guide/en/elasticsearch/guide/current/scoring-theory.html">TF-IDF algorithm</a> to match the tokens in the user&rsquo;s search term with the tokens stored in the search index, and retrieve a set of documents. It gives each one a <em>score</em>. The higher the score, the higher up a document will appear in the results.</p>
+
+<p>Because we store multiple fields for each document, our elasticsearch query actually involves multiple <em>subqueries</em>, and we define <em>boosts</em> to &ldquo;shape&rdquo; the score given by TF-IDF.</p>
+
+<p>The code that generates this query looks something like this:</p>
+
+<pre><code class="language-ruby">popularity_boost.wrap(
+ format_boost.wrap(
+   {
+     bool: {
+       should: [
+         core_query.match_phrase(&quot;title&quot;),
+         core_query.match_phrase(&quot;acronym&quot;),
+         core_query.match_phrase(&quot;description&quot;),
+         core_query.match_phrase(&quot;indexable_content&quot;),
+         core_query.match_all_terms(%w(title acronym description indexable_content)),
+         core_query.match_any_terms(%w(title acronym description indexable_content)),
+         core_query.minimum_should_match(&quot;all_searchable_text&quot;)
+       ],
+     }
+   }
+ )
+)
+</code></pre>
+
+<p>Essentially there are 9 features, which are combined to produce the ultimate score
+of a document.</p>
+
+<p><code>format_boost</code> is an example of one we changed recently. The &ldquo;format&rdquo; of a document is decided at publish time and <a href="https://www.gov.uk/api/search.json?facet_format=10000&amp;count=0">there are 67 of them</a>. We use the format to promote certain kinds of content.</p>
+
+<p>A subset of the formats are considered &ldquo;news-y&rdquo;, and for these the boost depends on how recently the document was published (<a href="https://www.wolframalpha.com/share/clip?f=d41d8cd98f00b204e9800998ecf8427e5qr62u0si">view score as a function of document age on Wolfram Alpha</a>)</p>
+
+<h3 id="limitations-of-this-code">Limitations of this code</h3>
+
+<p>We should be able to make this code work a lot better than it actually does. It bakes in a lot of shaky assumptions about what makes documents relevant to people, and the results are sensitive to small changes in the phrasing of the query.</p>
+
+<p>Unfortunately, it&rsquo;s also really hard to change this (or start over) without making it worse. The feedback cycle for new changes is really slow, because we typically have to deploy to production before we can really measure whether we&rsquo;re making things better or worse.</p>
+
+<p>We capture a lot of information about user behaviour through Google Analytics. We know what results users tend to click on, and we can use that to guess at what results should be ranked higher or lower than they actually are. But we don&rsquo;t yet have the infrastructure to use this data to drive product improvement.</p>
+
+<h3 id="machine-learning-for-search">Machine learning for search</h3>
+
+<p>Meanwhile, the open source software available for building search systems is getting better and better. There is now a <a href="https://elasticsearch-learning-to-rank.readthedocs.io/en/latest/">Learning to rank plugin</a> for Elasticsearch that lets you use machine learning to optimise the ranking of search results as a secondary step after fetching the most likely matches.</p>
+
+<p>This is really promising, but it&rsquo;s even more reliant on <a href="https://opensourceconnections.com/blog/2017/07/05/infrastructure_for_ltr/">data and data infrastructure</a>.</p>
+
+
+  </article>
+
+
+      <footer class="site-footer">
+        <span itemscope itemtype="http://schema.org/Person">
+          <link itemprop="url" href="http://example.org/">
+          <span itemprop="name"></span>
+
+          <br>
+
+          
+
+          
+
+          
+        </span>
+
+        
+      </footer>
+    </div>
+
+  <script src="/js/highlight.pack.js"></script>
+  <script>hljs.initHighlightingOnLoad();</script>
+
+  </body>
+</html>
+

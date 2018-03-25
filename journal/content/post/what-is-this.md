@@ -1,7 +1,6 @@
 ---
 title: "About this project"
 date: 2018-03-17T13:26:13Z
-draft: true
 tags: ["Week 0"]
 ---
 Hi! Over the next 3 months I'm going to be spending 1 day a week working on
