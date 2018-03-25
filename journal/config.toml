@@ -1,0 +1,15 @@
+baseURL = "http://example.org/"
+languageCode = "en-gb"
+title = "Accelerator project journal"
+theme = "Journal"
+
+# Deployment via docs folder for GitHub
+publishDir = "../docs"
+
+[params]
+  description = "A 3 month project to mine click logs for evaluating and improving searches for public information"
+  tagline = "A 3 month project to mine click logs for evaluating and improving site search"
+
+
+[taxonomies]
+  tag = "tags"
