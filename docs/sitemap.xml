@@ -3,34 +3,34 @@
   xmlns:xhtml="http://www.w3.org/1999/xhtml">
   
   <url>
-    <loc>http://example.org/post/background-govuk-search/</loc>
+    <loc>https://matmoore.github.io/accelerator/post/background-govuk-search/</loc>
     <lastmod>2018-03-17T13:26:14+00:00</lastmod>
   </url>
   
   <url>
-    <loc>http://example.org/post/what-is-this/</loc>
+    <loc>https://matmoore.github.io/accelerator/post/what-is-this/</loc>
     <lastmod>2018-03-17T13:26:13+00:00</lastmod>
   </url>
   
   <url>
-    <loc>http://example.org/</loc>
+    <loc>https://matmoore.github.io/accelerator/</loc>
     <lastmod>2018-03-17T13:26:14+00:00</lastmod>
     <priority>0</priority>
   </url>
   
   <url>
-    <loc>http://example.org/post/</loc>
+    <loc>https://matmoore.github.io/accelerator/post/</loc>
     <lastmod>2018-03-17T13:26:14+00:00</lastmod>
     <priority>0</priority>
   </url>
   
   <url>
-    <loc>http://example.org/tags/</loc>
+    <loc>https://matmoore.github.io/accelerator/tags/</loc>
     <priority>0</priority>
   </url>
   
   <url>
-    <loc>http://example.org/tags/week-0/</loc>
+    <loc>https://matmoore.github.io/accelerator/tags/week-0/</loc>
     <lastmod>2018-03-17T13:26:14+00:00</lastmod>
     <priority>0</priority>
   </url>
