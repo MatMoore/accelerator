@@ -109,10 +109,11 @@ def clicks_with_positions(analytics, next_page_token=None):
     """
     request_body =  {
         'viewId': VIEW_ID,
-        'dateRanges': [{'startDate': '2018-01-01', 'endDate': '2018-01-02'}],
+        'dateRanges': [{'startDate': '2018-01-01', 'endDate': '2018-01-01'}],
         'metrics': [{'expression': LINK_CTR}, {'expression': LINK_IMPRESSIONS}, {'expression': LINK_CLICKS}],
         #'orderBys': [{'fieldName': 'ga:pageViews', 'sortOrder': 'DESCENDING'}],
-        'dimensions': [{'name': CLIENT_ID}, {'name': CONTENT_ID_OR_PATH}, {'name': LINK_POSITION}, {'name': CUSTOM_VARIABLE_SEARCH_QUERY}],
+        #'dimensions': [{'name': CLIENT_ID}, {'name': CONTENT_ID_OR_PATH}, {'name': LINK_POSITION}, {'name': CUSTOM_VARIABLE_SEARCH_QUERY}],
+        'dimensions': [{'name': 'ga:hour'}, {'name': CLIENT_ID}, {'name': CONTENT_ID_OR_PATH}, {'name': LINK_POSITION}, {'name': CUSTOM_VARIABLE_SEARCH_QUERY}],
 
         'dimensionFilterClauses': [{
             'operator': 'AND',
@@ -126,6 +127,11 @@ def clicks_with_positions(analytics, next_page_token=None):
                     "dimensionName": "ga:productListName",
                     "operator": "EXACT",
                     "expressions": ["Site search results"]
+                },
+                {
+                    "dimensionName": "ga:hour",
+                    "operator": "EXACT",
+                    "expressions": ["09"]
                 },
             ]
         }]
@@ -244,7 +250,7 @@ def main():
     query_cost = response['queryCost']
     print(f'Query cost {query_cost}')
 
-    write_page_to_csv(response, 'data/client_clicks_with_positions_2018-01-01_page-0001.csv')
+    write_page_to_csv(response, 'data/clicks_with_positions_2018-01-01-0900_page-0001.csv')
 
 
 if __name__ == '__main__':
