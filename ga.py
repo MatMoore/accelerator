@@ -138,7 +138,8 @@ def clicks_with_positions(analytics, next_page_token=None):
     }
 
     if next_page_token:
-      request_body['nextPageToken'] = next_page_token
+      print('Using pageToken')
+      request_body['pageToken'] = next_page_token
 
     return analytics.reports().batchGet(
         body={
@@ -244,13 +245,27 @@ def main():
     # response = get_report(analytics)
     # print_response(response)
 
-    response = clicks_with_positions(analytics)
-    print(response['reports'][0]['data']['totals'])
-    print(response['reports'][0]['data']['rowCount'])
-    query_cost = response['queryCost']
-    print(f'Query cost {query_cost}')
+    next_page_token=None
 
-    write_page_to_csv(response, 'data/clicks_with_positions_2018-01-01-0900_page-0001.csv')
+    for i in range(100):
+        response = clicks_with_positions(analytics, next_page_token=next_page_token)
+        next_page_token = extract_page_token(response)
+
+        if next_page_token is None:
+            print('Next page not found, stopping')
+            break
+        else:
+            print(f'Next page token: {next_page_token}')
+
+        row_count = response['reports'][0]['data']['rowCount']
+        query_cost = response['queryCost']
+        totals = response['reports'][0]['data']['totals']
+
+        print(f'Row count: {row_count}')
+        print(f'Query cost {query_cost}')
+        print(f'Totals: {totals}')
+
+        write_page_to_csv(response, 'data/clicks_with_positions_2018-01-01-0900_page-{i:03d}.csv'.format(i=i))
 
 
 if __name__ == '__main__':
