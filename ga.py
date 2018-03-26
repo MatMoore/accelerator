@@ -9,9 +9,6 @@ from oauth2client.service_account import ServiceAccountCredentials
 from os import environ
 import pandas as pd
 
-
-print(environ.keys())
-
 SCOPES = ['https://www.googleapis.com/auth/analytics.readonly']
 VIEW_ID = '56562468'  # Q. Site search (entire site with query strings)
 # VIEW_ID = '53872948' # 1a. GOV.UK - Main profile
@@ -117,7 +114,21 @@ def clicks_with_positions(analytics, next_page_token=None):
         #'orderBys': [{'fieldName': 'ga:pageViews', 'sortOrder': 'DESCENDING'}],
         'dimensions': [{'name': CLIENT_ID}, {'name': CONTENT_ID_OR_PATH}, {'name': LINK_POSITION}, {'name': CUSTOM_VARIABLE_SEARCH_QUERY}],
 
-        # TODO: explicitly filter by product list
+        'dimensionFilterClauses': [{
+            'operator': 'AND',
+            'filters': [
+                {
+                    "dimensionName": LINK_POSITION,
+                    "operator": "NUMERIC_LESS_THAN",
+                    "expressions": ["21"]
+                },
+                {
+                    "dimensionName": "ga:productListName",
+                    "operator": "EXACT",
+                    "expressions": ["Site search results"]
+                },
+            ]
+        }]
     }
 
     if next_page_token:
@@ -228,7 +239,11 @@ def main():
     # print_response(response)
 
     response = clicks_with_positions(analytics)
-    print_response(response)
+    print(response['reports'][0]['data']['totals'])
+    print(response['reports'][0]['data']['rowCount'])
+    query_cost = response['queryCost']
+    print(f'Query cost {query_cost}')
+
     write_page_to_csv(response, 'data/client_clicks_with_positions_2018-01-01_page-0001.csv')
 
 
