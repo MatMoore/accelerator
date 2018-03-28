@@ -6,10 +6,21 @@
     <description>Recent content in Posts on Accelerator project journal</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en-gb</language>
-    <lastBuildDate>Sat, 17 Mar 2018 13:26:14 +0000</lastBuildDate>
+    <lastBuildDate>Wed, 28 Mar 2018 19:00:00 +0000</lastBuildDate>
     
 	<atom:link href="https://matmoore.github.io/accelerator/post/index.xml" rel="self" type="application/rss+xml" />
     
+    
+    <item>
+      <title>Getting some data</title>
+      <link>https://matmoore.github.io/accelerator/post/getting-data/</link>
+      <pubDate>Wed, 28 Mar 2018 19:00:00 +0000</pubDate>
+      
+      <guid>https://matmoore.github.io/accelerator/post/getting-data/</guid>
+      <description>This week my main goal was to get some data and explore it.
+I spent most of it figuring out how the Google Analytics API works. I found this quite daunting at first because the &amp;ldquo;getting started&amp;rdquo; documentation doesn&amp;rsquo;t link to a proper reference, and I didn&amp;rsquo;t have a good understanding of the concepts behind google analytics. But I found a couple of useful resources:
+ The dimensions and metrics explorer gave me most of the information I needed to query the API.</description>
+    </item>
     
     <item>
       <title>How does GOV.UK search work at the moment?</title>

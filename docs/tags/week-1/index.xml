@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Week 1 on Accelerator project journal</title>
+    <link>https://matmoore.github.io/accelerator/tags/week-1/</link>
+    <description>Recent content in Week 1 on Accelerator project journal</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-gb</language>
+    <lastBuildDate>Wed, 28 Mar 2018 19:00:00 +0000</lastBuildDate>
+    
+	<atom:link href="https://matmoore.github.io/accelerator/tags/week-1/index.xml" rel="self" type="application/rss+xml" />
+    
+    
+    <item>
+      <title>Getting some data</title>
+      <link>https://matmoore.github.io/accelerator/post/getting-data/</link>
+      <pubDate>Wed, 28 Mar 2018 19:00:00 +0000</pubDate>
+      
+      <guid>https://matmoore.github.io/accelerator/post/getting-data/</guid>
+      <description>This week my main goal was to get some data and explore it.
+I spent most of it figuring out how the Google Analytics API works. I found this quite daunting at first because the &amp;ldquo;getting started&amp;rdquo; documentation doesn&amp;rsquo;t link to a proper reference, and I didn&amp;rsquo;t have a good understanding of the concepts behind google analytics. But I found a couple of useful resources:
+ The dimensions and metrics explorer gave me most of the information I needed to query the API.</description>
+    </item>
+    
+  </channel>
+</rss>

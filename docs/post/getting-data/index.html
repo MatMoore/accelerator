@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en-gb">
+
+  <head>
+    <meta charset="utf-8">
+    <meta name="generator" content="Hugo 0.37.1" />
+
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="author" content="">
+    <meta property="og:url" content="https://matmoore.github.io/accelerator/post/getting-data/">
+
+    <title>Getting some data - Accelerator project journal</title>
+    <meta property="og:title" content="Getting some data - Accelerator project journal">
+    <meta property="og:type" content="article">
+    <meta name="description" content="">
+
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Code+Pro|Arvo:400,700">
+    <link rel="stylesheet" href="../../css/highlight.css">
+    <link rel="stylesheet" href="../../css/journal.css">
+    <link href="../../index.xml" rel="alternate" type="application/rss+xml" title="Accelerator project journal">
+
+  </head>
+
+  <body>
+    <div class="container">
+
+      <nav class="site-nav">
+        <a href="https://matmoore.github.io/accelerator/">Index</a>
+      </nav>
+
+
+  <article class="post">
+    <header class="post-header">
+      <h1 class="post-title">Getting some data <span class="tag">Week 1</span></h1>
+      <time class="post-date" datetime="2018-03-28 19:00:00 UTC">28 Mar 2018</time>
+
+    </header>
+    
+
+<p>This week my main goal was to get some data and explore it.</p>
+
+<p>I spent most of it figuring out how the Google Analytics API works. I found this quite daunting at first because the &ldquo;getting started&rdquo; documentation doesn&rsquo;t link to a proper reference, and I didn&rsquo;t have a good understanding of the concepts behind google analytics. But I found a couple of useful resources:</p>
+
+<ol>
+<li><p><a href="https://developers.google.com/analytics/devguides/reporting/core/dimsmets">The dimensions and metrics explorer</a> gave me most of the information I needed to query the API. I used it in conjunction with internal documentation on how we&rsquo;ve set up custom dimensions/custom variables.</p></li>
+
+<li><p><a href="https://developers.google.com/analytics/devguides/reporting/core/v4/rest/v4/reports/batchGet">The API reference for batchGet</a> documents the structure of the API request. Initially I was confused because if you go to the documentation for the python client library, and follow the obvious links to reference documentation, you end up <a href="https://developers.google.com/resources/api-libraries/documentation/analyticsreporting/v4/python/latest/index.html">here</a>. Which is completely useless. Thankfully if you know the JSON API representation you can guess what you need to pass to the python client library.</p></li>
+</ol>
+
+<h2 id="variables-i-m-using">Variables I&rsquo;m using</h2>
+
+<p>We use the &ldquo;E-commerce&rdquo; functionality of GA to track how users interact with site search.</p>
+
+<p>So a piece of content is modelled as a &ldquo;product&rdquo; and a search result page is modelled as a &ldquo;product list&rdquo;.</p>
+
+<p>The code that implements this is here: <a href="https://github.com/alphagov/static/blob/master/app/assets/javascripts/analytics/ecommerce.js">https://github.com/alphagov/static/blob/master/app/assets/javascripts/analytics/ecommerce.js</a></p>
+
+<p>This gives us the following set of dimensions and metrics:</p>
+
+<table>
+<thead>
+<tr>
+<th>name</th>
+<th>type</th>
+<th>meaning</th>
+</tr>
+</thead>
+
+<tbody>
+<tr>
+<td>ga:productSku</td>
+<td>Dimension</td>
+<td>Internal ID or path for a content item</td>
+</tr>
+
+<tr>
+<td>ga:productListName</td>
+<td>Dimension</td>
+<td>&ldquo;Site search results&rdquo;</td>
+</tr>
+
+<tr>
+<td>ga:productListPosition</td>
+<td>Dimension</td>
+<td>The position a link was shown in</td>
+</tr>
+
+<tr>
+<td>ga:dimension71</td>
+<td>Dimension</td>
+<td>The user&rsquo;s search term</td>
+</tr>
+
+<tr>
+<td>ga:dimension95</td>
+<td>Dimension</td>
+<td>The <a href="https://developers.google.com/analytics/devguides/collection/analyticsjs/cookies-user-id">client ID</a></td>
+</tr>
+
+<tr>
+<td>ga:productListClicks</td>
+<td>Metric</td>
+<td>The number of times a link was clicked</td>
+</tr>
+
+<tr>
+<td>ga:productListViews</td>
+<td>Metric</td>
+<td>The number of times a link was viewed</td>
+</tr>
+</tbody>
+</table>
+
+<p>I was able to <a href="https://github.com/MatMoore/accelerator/blob/master/ga.py#L104">write a query</a> that used all of these dimensions together, so that there are N rows in my report for every &ldquo;search session&rdquo;, where each search session is a different combination of user + search term, and N is the number of the search results they saw (I filtered this to just look at the first page).</p>
+
+<h2 id="exploring-the-data">Exploring the data</h2>
+
+<p>I extracted a very small amount of data and loaded it into a jupyter notebook so I could explore the different fields.</p>
+
+<p>I used some of the <a href="https://github.com/pandas-dev/pandas/blob/master/doc/cheatsheet/Pandas_Cheat_Sheet.pdf">summarisation methods in pandas</a> and plotted some histograms to look at the values.</p>
+
+<p>Some of the things I noticed:</p>
+
+<ul>
+<li>We&rsquo;re truncating the search term to 100 characters. A small but not insignificant amount of queries are truncated (I don&rsquo;t think this is a problem because 100 characters is enough to distinguish the user&rsquo;s intent)</li>
+<li>productListClicks is very binary (users either click something or don&rsquo;t click it) but productListViews shows that the same results are often viewed multiple times, suggesting people are bouncing back to the result page</li>
+<li>My code for paginating through the report had a bug on it so I accidently dropped the last page. Whoops.</li>
+</ul>
+
+<h2 id="next-steps">Next steps</h2>
+
+<p>I also had a look at Google BigQuery, which contains an export of the raw analytics data.
+I want to try and use this next so that I can more easily fetch a larger dataset, while being able to look at things that happened within a session.</p>
+
+<p>The schema is documented here: <a href="https://support.google.com/analytics/answer/3437719?hl=en">https://support.google.com/analytics/answer/3437719?hl=en</a>.</p>
+
+<p>My assumption is that this will let me look at what happened after a user clicked on a search result. We don&rsquo;t have a very clear way to tell if a user was satisfied after clicking a link, but we should be able to make a guess based on the time spent on the page and whether they went back to the results page afterwards.</p>
+
+
+  </article>
+
+
+      <footer class="site-footer">
+        <span itemscope itemtype="http://schema.org/Person">
+          <link itemprop="url" href="https://matmoore.github.io/accelerator/">
+          <span itemprop="name"></span>
+
+          <br>
+
+          
+
+          
+
+          
+        </span>
+
+        
+      </footer>
+    </div>
+
+  <script src="../../js/highlight.pack.js"></script>
+  <script>hljs.initHighlightingOnLoad();</script>
+
+  </body>
+</html>
+

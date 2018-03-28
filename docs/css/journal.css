@@ -23,7 +23,8 @@ h1,
 p,
 figure,
 pre,
-blockquote {
+blockquote,
+table {
   margin: 0 0 1rem; }
 
 hr {
