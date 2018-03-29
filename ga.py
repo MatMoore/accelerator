@@ -8,10 +8,13 @@ from apiclient.discovery import build
 from oauth2client.service_account import ServiceAccountCredentials
 from os import environ
 import pandas as pd
+import googleapiclient.errors
+import time
 
 SCOPES = ['https://www.googleapis.com/auth/analytics.readonly']
 VIEW_ID = '56562468'  # Q. Site search (entire site with query strings)
 # VIEW_ID = '53872948' # 1a. GOV.UK - Main profile
+# VIEW_ID = '87773428' # <- this is what's in bigquery
 GOOGLE_CLIENT_EMAIL = environ['GOOGLE_CLIENT_EMAIL']
 GOOGLE_PRIVATE_KEY = environ['GOOGLE_PRIVATE_KEY']
 
@@ -101,7 +104,7 @@ def old_clicks_with_positions(analytics):
     ).execute()
 
 
-def clicks_with_positions(analytics, next_page_token=None):
+def clicks_with_positions(analytics, next_page_token=None, hour='09'):
     """
     Get number of clicks on search results with positions.
 
@@ -131,7 +134,7 @@ def clicks_with_positions(analytics, next_page_token=None):
                 {
                     "dimensionName": "ga:hour",
                     "operator": "EXACT",
-                    "expressions": ["09"]
+                    "expressions": [hour]
                 },
             ]
         }]
@@ -140,6 +143,8 @@ def clicks_with_positions(analytics, next_page_token=None):
     if next_page_token:
       print('Using pageToken')
       request_body['pageToken'] = next_page_token
+
+    #request_body['pageSize'] = 10_000
 
     return analytics.reports().batchGet(
         body={
@@ -217,7 +222,7 @@ def write_page_to_csv(response, filename):
   cols = dimensionHeaders + [h['name'] for h in metricHeaders]
 
   data = report['data']
-  
+
   if 'samplesReadCounts' in data:
     print('Warning: Data is sampled!!')
 
@@ -233,7 +238,7 @@ def write_page_to_csv(response, filename):
     outrow.extend(metrics[0]['values'])
 
     rows.append(outrow)
-  
+
   df = pd.DataFrame(rows, columns=cols)
   df.to_csv(filename)
 
@@ -247,25 +252,37 @@ def main():
 
     next_page_token=None
 
-    for i in range(100):
-        response = clicks_with_positions(analytics, next_page_token=next_page_token)
-        next_page_token = extract_page_token(response)
+    i = 0
+    for hour in range(24):
+        while True:
+            i += 1
 
-        row_count = response['reports'][0]['data']['rowCount']
-        query_cost = response['queryCost']
-        totals = response['reports'][0]['data']['totals']
+            try:
+                response = clicks_with_positions(analytics, next_page_token=next_page_token, hour='{i:02d}'.format(i=hour))
+            except Exception as e:
+                print(e)
+                i -= 1
+                time.sleep(1)
+                continue
 
-        print(f'Row count: {row_count}')
-        print(f'Query cost {query_cost}')
-        print(f'Totals: {totals}')
+            next_page_token = extract_page_token(response)
 
-        write_page_to_csv(response, 'data/clicks_with_positions_2018-01-01-0900_page-{i:03d}.csv'.format(i=i))
+            row_count = response['reports'][0]['data']['rowCount']
+            query_cost = response['queryCost']
+            totals = response['reports'][0]['data']['totals']
 
-        if next_page_token is None:
-            print('Next page not found, stopping')
-            break
-        else:
-            print(f'Next page token: {next_page_token}')
+            print(f'Page {i}')
+            print(f'Row count: {row_count}')
+            print(f'Query cost {query_cost}')
+            print(f'Totals: {totals}')
+
+            write_page_to_csv(response, 'data/2018-01-01/clicks_with_positions_2018-01-01_page-{i:03d}.csv'.format(i=i))
+
+            if next_page_token is None:
+                print('Next page not found, stopping')
+                break
+            else:
+                print(f'Next page token: {next_page_token}')
 
 if __name__ == '__main__':
     main()
