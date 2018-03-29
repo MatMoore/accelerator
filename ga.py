@@ -251,12 +251,6 @@ def main():
         response = clicks_with_positions(analytics, next_page_token=next_page_token)
         next_page_token = extract_page_token(response)
 
-        if next_page_token is None:
-            print('Next page not found, stopping')
-            break
-        else:
-            print(f'Next page token: {next_page_token}')
-
         row_count = response['reports'][0]['data']['rowCount']
         query_cost = response['queryCost']
         totals = response['reports'][0]['data']['totals']
@@ -267,6 +261,11 @@ def main():
 
         write_page_to_csv(response, 'data/clicks_with_positions_2018-01-01-0900_page-{i:03d}.csv'.format(i=i))
 
+        if next_page_token is None:
+            print('Next page not found, stopping')
+            break
+        else:
+            print(f'Next page token: {next_page_token}')
 
 if __name__ == '__main__':
     main()
