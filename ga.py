@@ -250,15 +250,20 @@ def main():
     # response = get_report(analytics)
     # print_response(response)
 
-    next_page_token=None
-
-    i = 0
     for hour in range(24):
+        i = 0
+        next_page_token=None
+
         while True:
             i += 1
 
             try:
                 response = clicks_with_positions(analytics, next_page_token=next_page_token, hour='{i:02d}'.format(i=hour))
+            except googleapiclient.errors.HttpError as e:
+                print(e)
+                i -= 1
+                time.sleep(100)
+                continue
             except Exception as e:
                 print(e)
                 i -= 1
@@ -272,11 +277,12 @@ def main():
             totals = response['reports'][0]['data']['totals']
 
             print(f'Page {i}')
+            print(f'Hour={hour}')
             print(f'Row count: {row_count}')
             print(f'Query cost {query_cost}')
             print(f'Totals: {totals}')
 
-            write_page_to_csv(response, 'data/2018-01-01/clicks_with_positions_2018-01-01_page-{i:03d}.csv'.format(i=i))
+            write_page_to_csv(response, 'data/2018-01-01/clicks_with_positions_2018-01-01_{hour:02d}_page-{i:03d}.csv'.format(i=i, hour=hour))
 
             if next_page_token is None:
                 print('Next page not found, stopping')
