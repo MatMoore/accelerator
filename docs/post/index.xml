@@ -6,10 +6,20 @@
     <description>Recent content in Posts on Accelerator project journal</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en-gb</language>
-    <lastBuildDate>Wed, 28 Mar 2018 19:00:00 +0000</lastBuildDate>
+    <lastBuildDate>Mon, 02 Apr 2018 14:00:00 +0000</lastBuildDate>
     
 	<atom:link href="https://matmoore.github.io/accelerator/post/index.xml" rel="self" type="application/rss+xml" />
     
+    
+    <item>
+      <title>Data problems</title>
+      <link>https://matmoore.github.io/accelerator/post/not-getting-data/</link>
+      <pubDate>Mon, 02 Apr 2018 14:00:00 +0000</pubDate>
+      
+      <guid>https://matmoore.github.io/accelerator/post/not-getting-data/</guid>
+      <description>This week was really unproductive. I hit some roadblocks with the data so I didn&amp;rsquo;t accomplish what I set out to do on Thursday. I&amp;rsquo;m finding this really stressful at the moment as I&amp;rsquo;m really worried that I won&amp;rsquo;t be able to get the data I need to actually do the project I proposed. 😞
+What I planned to do Thursday My aim for this weak was to work out how to use Google BigQuery to fetch the data I need instead of the google Analytics API, because:</description>
+    </item>
     
     <item>
       <title>Getting some data</title>
