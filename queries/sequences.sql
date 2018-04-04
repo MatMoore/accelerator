@@ -5,6 +5,7 @@ WITH search_visits as (
         visitId,
         hits.page.pagePath,
         hits.hitNumber
+        hits.time
     FROM
         `govuk-bigquery-analytics.87773428.ga_sessions_*`
     CROSS JOIN UNNEST(hits) as hits
