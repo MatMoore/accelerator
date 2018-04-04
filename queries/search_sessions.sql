@@ -4,8 +4,11 @@ hits.product.customDimensions.value as searchTerm,
 hits.hitNumber as hitNumber, -- This is the hit number of the results page (for impressions) or the page itself (for clicks)
 hits.product.productSKU as contentIdOrPath,
 hits.product.productListPosition as linkPosition,
-hits.product.isImpression as isImpression,
-hits.product.isClick as isClick
+CASE
+    WHEN hits.product.isImpression = true and hits.product.isClick IS NULL THEN 'impression'
+    WHEN hits.product.isClick = true and hits.product.isImpression IS NULL THEN 'click'
+    ELSE NULL
+END AS observationType
 
 FROM TABLE_DATE_RANGE([govuk-bigquery-analytics:87773428.ga_sessions_],TIMESTAMP('2018-04-03'),TIMESTAMP('2018-04-03'))
 
