@@ -13,6 +13,7 @@ google-auth = "*"
 pylint = "*"
 "autopep8" = "*"
 pandas = "*"
+google-cloud-bigquery = "==0.31.0"
 
 
 [dev-packages]
