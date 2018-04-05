@@ -195,7 +195,12 @@ def page_to_dataframe(response):
     print('Warning: Data may change if requested later!!')
 
   rows = []
-  for inrow in data['rows']:
+
+  inrows = data.get('rows', [])
+  if not inrows:
+      print('Warning: No rows in response')
+
+  for inrow in inrows:
     outrow = inrow['dimensions']
     metrics = inrow['metrics']
     assert len(metrics) == 1
@@ -242,11 +247,17 @@ def main():
 
             next_page_token = extract_page_token(response)
 
-            row_count = response['reports'][0]['data']['rowCount']
-            query_cost = response['queryCost']
-            totals = response['reports'][0]['data']['totals']
+            try:
+                row_count = response['reports'][0]['data']['rowCount']
+                totals = response['reports'][0]['data']['totals']
+            except KeyError:
+                print('Warning: missing rowCount/totals')
+                row_count = 0
+                totals = 0
 
-            print(f'Page {i}')
+            query_cost = response['queryCost']
+
+            print(f'\nPage {i}')
             print(f'Search term={search_term}')
             print(f'Row count: {row_count}')
             print(f'Query cost {query_cost}')
