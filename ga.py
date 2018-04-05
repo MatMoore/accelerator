@@ -59,6 +59,10 @@ def clicks_only(analytics, search_term, next_page_token=None):
     Get number of clicks on search results.
 
     We send the position of the result with each click and impression using Enhanced-Ecommerce
+
+    NOTE: In Februrary 2018, there was a bug that caused the CLIENT_ID to be reported as [object object].
+          this causes a bunch of sessions to be smooshed together. This is affecting some sessions
+          in march as well.
     """
     request_body =  {
         'viewId': VIEW_ID,
