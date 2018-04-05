@@ -39,4 +39,22 @@ if __name__ == '__main__':
         }, axis='columns'
     )
 
+    # Assign a session ID to each unique combination of (userId, searchTerm)
+    # This is not perfect, because the user could return to the same search multiple times,
+    # and we just treat it as one session
+    df['searchSessionId'] = df[['userId', 'searchTerm']].apply(lambda x: '_'.join(x.map(str)), axis=1)
+
+    # We don't actually need this if we have a session ID
+    df.drop(['userId'], axis=1, inplace=True)
+
+    # --- Unadressed problems ---
+    #
+    # 1. Since we query by product, instead of by session, we may get incomplete sessions at the start
+    #    and end of the time period.
+    #
+    # 2. Similar looking search terms are considered unique
+    #
+    # 3. I mangled the user ID since the ga.py script treats it as a float. This should be fine as long as it
+    #    preserves uniqueness.
+
     df.to_csv(output_filename, index=False)
