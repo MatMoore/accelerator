@@ -54,69 +54,27 @@ def initialize_analyticsreporting():
     return analytics
 
 
-def old_clicks_with_positions(analytics):
+def clicks_only(analytics, search_term, next_page_token=None):
     """
-    This fetches search clicks with position using the old cookie tracking
-    method.
-
-    The position of the link in search results was propagated via a cookie and
-    set as a custom dimension when the page was viewed.
-
-    This gives us number of clicks for each combination of (query, content item, position)
-
-    This query is based on https://github.com/gds-attic/search-performance-dashboard/blob/master/dashboard/fetch/ga.py
-
-    FIXME: this does not return any results
-    """
-
-    return analytics.reports().batchGet(
-        body={
-            'reportRequests': [
-                {
-                    'viewId': VIEW_ID,
-                    'dateRanges': [{'startDate': '2017-01-01', 'endDate': '2017-01-03'}],
-                    'metrics': [{'expression': 'ga:pageViews'}],
-                    #'orderBys': [{'fieldName': 'ga:pageViews', 'sortOrder': 'DESCENDING'}],
-                    'dimensions': [{'name': 'ga:pagePath'}, {'name': 'ga:previousPagePath'}, {'name': 'ga:customVarValue21'}],
-                    'dimensionFilterClauses': [{
-                        'operator': 'AND',
-                        'filters': [
-                            {
-                                "dimensionName": "ga:previousPagePath",
-                                "operator": "REGEXP",
-                                "expressions": [r'^/search\?']
-                            },
-                            # {
-                            #     "dimensionName": "ga:pagePath",
-                            #     "operator": "REGEXP",
-                            #     "not": True,
-                            #     "expressions": [r'^/search\?']
-                            # },
-                            # {
-                            #     "dimensionName": "ga:customVarValue21",
-                            #     "operator": "REGEXP",
-                            #     "expressions": [r'.']
-                            # },
-                        ]
-                    }],
-                }]
-        }
-    ).execute()
-
-
-def clicks_with_positions(analytics, next_page_token=None, hour='09'):
-    """
-    Get number of clicks on search results with positions.
+    Get number of clicks on search results.
 
     We send the position of the result with each click and impression using Enhanced-Ecommerce
     """
     request_body =  {
         'viewId': VIEW_ID,
-        'dateRanges': [{'startDate': '2018-01-01', 'endDate': '2018-01-01'}],
-        'metrics': [{'expression': LINK_CTR}, {'expression': LINK_IMPRESSIONS}, {'expression': LINK_CLICKS}],
+        'dateRanges': [{'startDate': '2018-03-01', 'endDate': '2018-03-14'}],
+        'metrics': [{'expression': LINK_CLICKS}],
         #'orderBys': [{'fieldName': 'ga:pageViews', 'sortOrder': 'DESCENDING'}],
         #'dimensions': [{'name': CLIENT_ID}, {'name': CONTENT_ID_OR_PATH}, {'name': LINK_POSITION}, {'name': CUSTOM_VARIABLE_SEARCH_QUERY}],
-        'dimensions': [{'name': 'ga:hour'}, {'name': CLIENT_ID}, {'name': CONTENT_ID_OR_PATH}, {'name': LINK_POSITION}, {'name': CUSTOM_VARIABLE_SEARCH_QUERY}],
+        'dimensions': [{'name': CLIENT_ID}, {'name': CONTENT_ID_OR_PATH}, {'name': LINK_POSITION}, {'name': CUSTOM_VARIABLE_SEARCH_QUERY}],
+
+        'metricFilterClauses': [{
+            'filters': [{
+                'metricName': LINK_CLICKS,
+                'operator': 'GREATER_THAN',
+                'comparisonValue': "0"
+            }]
+        }],
 
         'dimensionFilterClauses': [{
             'operator': 'AND',
@@ -132,9 +90,9 @@ def clicks_with_positions(analytics, next_page_token=None, hour='09'):
                     "expressions": ["Site search results"]
                 },
                 {
-                    "dimensionName": "ga:hour",
-                    "operator": "EXACT",
-                    "expressions": [hour]
+                    "dimensionName": CUSTOM_VARIABLE_SEARCH_QUERY,
+                    "operator": "REGEXP",
+                    "expressions": [search_term]
                 },
             ]
         }]
@@ -208,7 +166,14 @@ def print_response(response):
                 for metricHeader, value in zip(metricHeaders, values.get('values')):
                     print(metricHeader.get('name') + ': ' + value)
 
-def write_page_to_csv(response, filename):
+
+def write_page_to_csv(response, filename, **csv_kwargs):
+  df = page_to_dataframe(response)
+  df.to_csv(filename, **csv_kwargs)
+  return df
+
+
+def page_to_dataframe(response):
   report = response['reports'][0]
 
   #assert report['isDataGolden']
@@ -240,7 +205,6 @@ def write_page_to_csv(response, filename):
     rows.append(outrow)
 
   df = pd.DataFrame(rows, columns=cols)
-  df.to_csv(filename)
 
   return df
 
@@ -250,7 +214,13 @@ def main():
     # response = get_report(analytics)
     # print_response(response)
 
-    for hour in range(24):
+    with open('top_searches.txt') as f:
+        search_terms = f.readlines()
+
+    for search_term in search_terms:
+        search_term = search_term.strip()
+        search_term_regex = f"^\s*{search_term}\s*$" # allow for some whitespace around the search term
+
         i = 0
         next_page_token=None
 
@@ -258,7 +228,7 @@ def main():
             i += 1
 
             try:
-                response = clicks_with_positions(analytics, next_page_token=next_page_token, hour='{i:02d}'.format(i=hour))
+                response = clicks_only(analytics, search_term_regex, next_page_token=next_page_token)
             except googleapiclient.errors.HttpError as e:
                 print(e)
                 i -= 1
@@ -277,12 +247,12 @@ def main():
             totals = response['reports'][0]['data']['totals']
 
             print(f'Page {i}')
-            print(f'Hour={hour}')
+            print(f'Search term={search_term}')
             print(f'Row count: {row_count}')
             print(f'Query cost {query_cost}')
             print(f'Totals: {totals}')
 
-            write_page_to_csv(response, 'data/2018-01-01/clicks_with_positions_2018-01-01_{hour:02d}_page-{i:03d}.csv'.format(i=i, hour=hour))
+            write_page_to_csv(response, 'data/top_search_terms/clicks_only_2018-03-01_2018-03-14_{search_term}_page-{i:03d}.csv'.format(i=i, search_term=search_term.replace(" ", "_")))
 
             if next_page_token is None:
                 print('Next page not found, stopping')
