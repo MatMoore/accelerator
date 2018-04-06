@@ -54,9 +54,9 @@ def initialize_analyticsreporting():
     return analytics
 
 
-def clicks_only(analytics, search_term, next_page_token=None):
+def clicks_and_impressions(analytics, search_term, next_page_token=None):
     """
-    Get number of clicks on search results.
+    Get number of clicks and views on search results.
 
     We send the position of the result with each click and impression using Enhanced-Ecommerce
 
@@ -67,18 +67,18 @@ def clicks_only(analytics, search_term, next_page_token=None):
     request_body =  {
         'viewId': VIEW_ID,
         'dateRanges': [{'startDate': '2018-03-01', 'endDate': '2018-03-14'}],
-        'metrics': [{'expression': LINK_CLICKS}],
+        'metrics': [{'expression': LINK_IMPRESSIONS}, {'expression': LINK_CLICKS}],
         #'orderBys': [{'fieldName': 'ga:pageViews', 'sortOrder': 'DESCENDING'}],
         #'dimensions': [{'name': CLIENT_ID}, {'name': CONTENT_ID_OR_PATH}, {'name': LINK_POSITION}, {'name': CUSTOM_VARIABLE_SEARCH_QUERY}],
         'dimensions': [{'name': CLIENT_ID}, {'name': CONTENT_ID_OR_PATH}, {'name': LINK_POSITION}, {'name': CUSTOM_VARIABLE_SEARCH_QUERY}],
 
-        'metricFilterClauses': [{
-            'filters': [{
-                'metricName': LINK_CLICKS,
-                'operator': 'GREATER_THAN',
-                'comparisonValue': "0"
-            }]
-        }],
+        # 'metricFilterClauses': [{
+        #     'filters': [{
+        #         'metricName': LINK_CLICKS,
+        #         'operator': 'GREATER_THAN',
+        #         'comparisonValue': "0"
+        #     }]
+        # }],
 
         'dimensionFilterClauses': [{
             'operator': 'AND',
@@ -237,7 +237,7 @@ def main():
             i += 1
 
             try:
-                response = clicks_only(analytics, search_term_regex, next_page_token=next_page_token)
+                response = clicks_and_impressions(analytics, search_term_regex, next_page_token=next_page_token)
             except googleapiclient.errors.HttpError as e:
                 print(e)
                 i -= 1
@@ -267,7 +267,7 @@ def main():
             print(f'Query cost {query_cost}')
             print(f'Totals: {totals}')
 
-            write_page_to_csv(response, 'data/top_search_terms/clicks_only_2018-03-01_2018-03-14_{search_term}_page-{i:03d}.csv'.format(i=i, search_term=search_term.replace(" ", "_")))
+            write_page_to_csv(response, 'data/top_search_terms_2/clicks_and_impressions_2018-03-01_2018-03-14_{search_term}_page-{i:03d}.csv'.format(i=i, search_term=search_term.replace(" ", "_")))
 
             if next_page_token is None:
                 print('Next page not found, stopping')
