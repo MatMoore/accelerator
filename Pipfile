@@ -14,6 +14,7 @@ pylint = "*"
 "autopep8" = "*"
 pandas = "*"
 google-cloud-bigquery = "==0.31.0"
+pandas-gbq = "*"
 
 
 [dev-packages]

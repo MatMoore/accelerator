@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "b2f969f787620a2b235397a1941e3a4b0e1a7a48761c2c060dd7d662482a10b9"
+            "sha256": "0e80e0a151a9800db7cc62f65103ec5da7ab8b0f176eec1a3c54584f4c8b5cec"
         },
         "host-environment-markers": {
             "implementation_name": "cpython",
@@ -29,10 +29,10 @@
     "default": {
         "astroid": {
             "hashes": [
-                "sha256:b76e5109ff0f386dd229673ca1323d21b1e9bb9c38eaed2cf830882dd7628be2",
-                "sha256:a92c1197dd496ef2470e73e1c296fc02a719907ee07259744e26a13bda9d4862"
+                "sha256:38186e481b65877fd8b1f9acc33e922109e983eb7b6e487bd4c71002134ad331",
+                "sha256:35cfae47aac19c7b407b7095410e895e836f2285ccf1220336afba744cc4c5f2"
             ],
-            "version": "==1.6.2"
+            "version": "==1.6.3"
         },
         "autopep8": {
             "hashes": [
@@ -88,6 +88,13 @@
                 "sha256:098fade613c25b4527b2c08fa42d11f3c2037dda8995d86de0745228e965d445"
             ],
             "version": "==0.0.3"
+        },
+        "google-auth-oauthlib": {
+            "hashes": [
+                "sha256:81ba22acada4d13b1d83f9371ab19fd61f1250a542d21cf49e4dcf0637a7344a",
+                "sha256:226d1d0960f86ba5d9efd426a70b291eaba96f47d071657e0254ea969025728a"
+            ],
+            "version": "==0.2.0"
         },
         "google-cloud-bigquery": {
             "hashes": [
@@ -213,6 +220,13 @@
             ],
             "version": "==4.1.2"
         },
+        "oauthlib": {
+            "hashes": [
+                "sha256:09d438bcac8f004ae348e721e9d8a7792a9e23cd574634e973173344046287f5",
+                "sha256:909665297635fa11fe9914c146d875f2ed41c8c2d78e21a529dd71c0ba756508"
+            ],
+            "version": "==2.0.7"
+        },
         "pandas": {
             "hashes": [
                 "sha256:68ac484e857dcbbd07ea7c6f516cc67f7f143f5313d9bc661470e7f473528882",
@@ -232,6 +246,13 @@
                 "sha256:44a94091dd71f05922eec661638ec1a35f26d573c119aa2fad964f10a2880e6c"
             ],
             "version": "==0.22.0"
+        },
+        "pandas-gbq": {
+            "hashes": [
+                "sha256:909b8b5efbe8695f6e13c03865383e54c76f4996bd30bd6face59241cc53b6a2",
+                "sha256:d3d78cd879901ad05245a1ae2844759af934b235369da312f1f60560d684c4e9"
+            ],
+            "version": "==0.4.0"
         },
         "protobuf": {
             "hashes": [
@@ -301,10 +322,10 @@
         },
         "pylint": {
             "hashes": [
-                "sha256:34ab1a62fbdd48059d082f5a52b7e719a39b757a53ecbf0b2b7169b9c6a2cc28",
-                "sha256:c77311859e0c2d7932095f30d2b1bfdc4b6fe111f534450ba727a52eae330ef2"
+                "sha256:0b7e6b5d9f1d4e0b554b5d948f14ed7969e8cdf9a0120853e6e5af60813b18ab",
+                "sha256:34738a82ab33cbd3bb6cd4cef823dbcabdd2b6b48a4e3a3054a2bbbf0c712be9"
             ],
-            "version": "==1.8.3"
+            "version": "==1.8.4"
         },
         "python-dateutil": {
             "hashes": [
@@ -333,6 +354,13 @@
                 "sha256:9c443e7324ba5b85070c4a818ade28bfabedf16ea10206da1132edaa6dda237e"
             ],
             "version": "==2.18.4"
+        },
+        "requests-oauthlib": {
+            "hashes": [
+                "sha256:50a8ae2ce8273e384895972b56193c7409601a66d4975774c60c2aed869639ca",
+                "sha256:883ac416757eada6d3d07054ec7092ac21c7f35cb1d2cf82faf205637081f468"
+            ],
+            "version": "==0.8.0"
         },
         "rsa": {
             "hashes": [
