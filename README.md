@@ -1,7 +1,7 @@
 # accelerator
 Code for my data science accelerator project (https://matmoore.github.io/accelerator/)
 
-## About this project
+## Overview
 This is a 3 month project to mine search logs for evaluating/improving the search function on [GOV.UK](https://www.gov.uk). I'm working on this project 1 day a week.
 
 More background:
