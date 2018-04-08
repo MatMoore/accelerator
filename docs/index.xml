@@ -6,10 +6,21 @@
     <description>Recent content on Accelerator project journal</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en-gb</language>
-    <lastBuildDate>Mon, 02 Apr 2018 14:00:00 +0000</lastBuildDate>
+    <lastBuildDate>Sun, 08 Apr 2018 10:00:00 +0000</lastBuildDate>
     
 	<atom:link href="https://matmoore.github.io/accelerator/index.xml" rel="self" type="application/rss+xml" />
     
+    
+    <item>
+      <title>Predicting search result relevance with a click model</title>
+      <link>https://matmoore.github.io/accelerator/post/dynamic-bayesian-network-model/</link>
+      <pubDate>Sun, 08 Apr 2018 10:00:00 +0000</pubDate>
+      
+      <guid>https://matmoore.github.io/accelerator/post/dynamic-bayesian-network-model/</guid>
+      <description>For my project I want to use search logs to model user behaviour on GOV.UK search.
+The approach I want to follow is based on a paper titled A Dynamic Bayesian Network Click Model for Web Search Ranking (Chapelle and Zhang 2009)
+Overview of the paper The Dynamic Bayesian Network model is one of many click models for modelling search behaviour in terms of random variables. Given a search engine result page, a click model should be able to predict the probability that a user will click on any of the links on the page.</description>
+    </item>
     
     <item>
       <title>Data problems</title>

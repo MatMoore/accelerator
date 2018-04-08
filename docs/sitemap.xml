@@ -3,6 +3,11 @@
   xmlns:xhtml="http://www.w3.org/1999/xhtml">
   
   <url>
+    <loc>https://matmoore.github.io/accelerator/post/dynamic-bayesian-network-model/</loc>
+    <lastmod>2018-04-08T10:00:00+00:00</lastmod>
+  </url>
+  
+  <url>
     <loc>https://matmoore.github.io/accelerator/post/not-getting-data/</loc>
     <lastmod>2018-04-02T14:00:00+00:00</lastmod>
   </url>
@@ -24,13 +29,13 @@
   
   <url>
     <loc>https://matmoore.github.io/accelerator/</loc>
-    <lastmod>2018-04-02T14:00:00+00:00</lastmod>
+    <lastmod>2018-04-08T10:00:00+00:00</lastmod>
     <priority>0</priority>
   </url>
   
   <url>
     <loc>https://matmoore.github.io/accelerator/post/</loc>
-    <lastmod>2018-04-02T14:00:00+00:00</lastmod>
+    <lastmod>2018-04-08T10:00:00+00:00</lastmod>
     <priority>0</priority>
   </url>
   
@@ -54,6 +59,12 @@
   <url>
     <loc>https://matmoore.github.io/accelerator/tags/week-2/</loc>
     <lastmod>2018-04-02T14:00:00+00:00</lastmod>
+    <priority>0</priority>
+  </url>
+  
+  <url>
+    <loc>https://matmoore.github.io/accelerator/tags/week-3/</loc>
+    <lastmod>2018-04-08T10:00:00+00:00</lastmod>
     <priority>0</priority>
   </url>
   
