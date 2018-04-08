@@ -1,6 +1,14 @@
 # accelerator
 Code for my data science accelerator project (https://matmoore.github.io/accelerator/)
 
+## About this project
+This is a 3 month project to mine search logs for evaluating/improving the search function on [GOV.UK](https://www.gov.uk). I'm working on this project 1 day a week.
+
+More background:
+- [About the project](https://matmoore.github.io/accelerator/post/what-is-this/)
+- [How does GOV.UK search work at the moment](https://matmoore.github.io/accelerator/post/background-govuk-search/)
+- [Predicting search result relevance with a click model](https://matmoore.github.io/accelerator/post/dynamic-bayesian-network-model/)
+
 ## Session dataset
 The basic dataset I'm trying to generate has these columns:
 
