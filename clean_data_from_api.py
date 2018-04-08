@@ -9,8 +9,12 @@ def combine_pages(datadir):
     """
     parts = os.listdir(datadir)
 
-    df_from_each_file = (pd.read_csv(datadir + f) for f in parts)
-    return pd.concat(df_from_each_file, ignore_index=True)
+    def generate_files():
+        for f in parts:
+            print(f)
+            yield pd.read_csv(datadir + f)
+
+    return pd.concat(generate_files(), ignore_index=True)
 
 
 def filter_out_queries_with_not_enough_sessions(df):
@@ -59,7 +63,7 @@ if __name__ == '__main__':
             'ga:productSku': 'contentIdOrPath',
             'ga:productListPosition': 'rank',
             'ga:dimension71': 'searchTerm',
-            #'ga:productListViews': 'impressions',
+            'ga:productListViews': 'impressions',
             'ga:productListClicks': 'clicks'
         }, axis='columns'
     )
