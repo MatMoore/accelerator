@@ -9,6 +9,8 @@ CanonifyURLs = true
 # Deployment via docs folder for GitHub
 publishDir = "../docs"
 
+displayMath = [['$$','$$'], ['\\[','\\]']]
+
 [params]
   description = "A 3 month project to mine click logs for evaluating and improving searches for public information"
   tagline = "A 3 month project to mine click logs for evaluating and improving site search"
