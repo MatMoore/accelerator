@@ -4,36 +4,41 @@ from oauth2client.service_account import ServiceAccountCredentials
 from google.oauth2 import service_account
 from os import environ
 
-import pandas_gbq
-
-# this works but returns a low level API client
-# documentation: https://developers.google.com/api-client-library/python/guide/aaa_apikeys
-# key = environ['BIGQUERY_API_KEY']
-# service = build('bigquery', 'v2', developerKey=key)
-
 SCOPES = ['https://www.googleapis.com/auth/bigquery'] # https://developers.google.com/identity/protocols/googlescopes#bigqueryv2]
 
 client = bigquery.Client.from_service_account_json('govuk_bigquery.json')
 
+# There are ~100,000 sessions involving search per day
+# and the estimated results size is around 1GB per week of data
+# TODO: measure the actual size
 query = '''
 SELECT
-  CONCAT(
-    'https://stackoverflow.com/questions/',
-    CAST(id as STRING)) as url,
-  view_count
-FROM `bigquery-public-data.stackoverflow.posts_questions`
-WHERE tags like '%google-bigquery%'
-ORDER BY view_count DESC
+CONCAT(fullVisitorId,'|',CAST(visitId as STRING)) AS sessionId,
+customDimensions.value as searchTerm,
+hits.hitNumber as hitNumber, -- This is the hit number of the results page (for impressions) or the page itself (for clicks)
+product.productSKU as contentIdOrPath,
+product.productListPosition as linkPosition,
+CASE
+    WHEN product.isImpression = true and product.isClick IS NULL THEN 'impression'
+    WHEN product.isClick = true and product.isImpression IS NULL THEN 'click'
+    ELSE NULL
+END AS observationType
+
+FROM `govuk-bigquery-analytics.87773428.ga_sessions_*`
+CROSS JOIN UNNEST(hits) as hits
+CROSS JOIN UNNEST(hits.product) as product
+CROSS JOIN UNNEST(product.customDimensions) as customDimensions
+
+WHERE product.productListName = 'Site search results'
+AND _TABLE_SUFFIX BETWEEN '20180403' AND '20180403'
+AND product.productListPosition <= 20
+AND customDimensions.index = 71
 LIMIT 10
 '''
 
-# query_job = client.query(query2)
-# results = query_job.result()
+# Bigquery client docs: https://googlecloudplatform.github.io/google-cloud-python/latest/bigquery/usage.html
+query_job = client.query(query)
+results = query_job.result()
 
-# for row in results:
-#     print(row.fullVisitorId)
-
-#results = pandas_gbq.read_gbq('SELECT fullVisitorId FROM `govuk-bigquery-analytics.87773428.ga_sessions_2018040` LIMIT 10', project_id='govuk-bigquery-analytics', private_key='govuk_bigquery.json')
-results = pandas_gbq.read_gbq('SELECT fullVisitorId FROM govuk-bigquery-analytics.87773428.ga_sessions_2018040 LIMIT 10', project_id='govuk-bigquery-analytics', private_key='govuk_bigquery.json')
-
-import pdb; pdb.set_trace()
+for row in results:
+  print(row)
