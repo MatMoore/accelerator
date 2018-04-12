@@ -27,14 +27,10 @@ CROSS JOIN UNNEST(hits.product) as product
 CROSS JOIN UNNEST(product.customDimensions) as customDimensions
 
 WHERE product.productListName = 'Site search results'
-AND _TABLE_SUFFIX BETWEEN '20180403' AND '20180410'
+AND _TABLE_SUFFIX BETWEEN '20180403' AND '20180411'
 AND product.productListPosition <= 20
 AND customDimensions.index = 71
-LIMIT 10
 '''
 
 results = pandas_gbq.read_gbq(query, project_id='govuk-bigquery-analytics', private_key='govuk_bigquery.json', dialect='standard')
-results.to_csv('data/bigquery_results_20180403_20180410.csv', index=False)
-
-for row in results:
-  print(row)
+results.to_csv('data/bigquery_results_20180403_20180411.csv', index=False)
