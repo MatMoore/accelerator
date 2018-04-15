@@ -19,12 +19,16 @@ logging.basicConfig(filename='load_sessions.log',level=logging.INFO)
 
 def sessions_to_observations(df):
     """
-    Map from sessionId to a list of all indexes relating to that session
+    Map from (sessionId, searchTerm) to a list of all indexes relating to that session
+
+    searchTerm is included because a user run multiple searches per session, and we
+    want to consider them separately.
     """
     sessions = defaultdict(list)
     for index, row in df.iterrows():
         session = row['searchSessionId']
-        sessions[session].append(index)
+        search_term = row['searchTerm']
+        sessions[(session, search_term)].append(index)
 
     return sessions
 
@@ -73,11 +77,8 @@ def process_session(rank_order, invalid_counter):
 
     passed_over_results = passed_over.contentIdOrPath.tolist()
     clicked_results = clicks.contentIdOrPath.tolist()
-    logging.info(f'passed over: {passed_over_results}')
-    logging.info(f'clicked: {clicked_results}')
-    logging.info(f'final rank: {final_rank}')
 
-    return {
+    session = {
         'searchSessionId': session_id,
         'searchTerm': search_term,
         'finalRank': final_rank.item(),
@@ -85,6 +86,9 @@ def process_session(rank_order, invalid_counter):
         'clickedResults': clicked_results,
         'finalItemClicked': final_url_clicked,
     }
+
+    logging.info(session)
+    return session
 
 
 if __name__ == '__main__':
