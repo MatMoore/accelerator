@@ -61,7 +61,7 @@ def insert_session_into_database(search_session, conn, input_filename):
         result = conn.execute(stmt)
         query_id = result.inserted_primary_key[0]
     except IntegrityError:
-        stmt = select([query_table.c.query_id])
+        stmt = select([query_table.c.query_id]).where(query_table.c.search_term_lowercase == search_session['searchTerm'])
         result = conn.execute(stmt)
         query_id = result.fetchone()[0]
 
