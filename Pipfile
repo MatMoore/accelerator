@@ -17,6 +17,8 @@ google-cloud-bigquery = "==0.31.0"
 pandas-gbq = "*"
 sqlalchemy = "*"
 "psycopg2" = "*"
+sklearn = "*"
+scipy = "*"
 
 
 [dev-packages]
