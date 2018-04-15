@@ -15,22 +15,22 @@ metadata = MetaData()
 
 search_table = Table('searches', metadata,
     Column('id', BigInteger, primary_key=True),
-    Column('query_id', None, ForeignKey('queries.query_id')),
-    Column('dataset_id', None, ForeignKey('datasets.dataset_id')),
-    Column('clicked_urls', ARRAY(String)),
-    Column('passed_over_urls', ARRAY(String)),
-    Column('final_click_url', String),
-    Column('final_click_rank', Integer)
+    Column('query_id', None, ForeignKey('queries.query_id', ondelete='CASCADE')),
+    Column('dataset_id', None, ForeignKey('datasets.dataset_id', ondelete='CASCADE')),
+    Column('clicked_urls', ARRAY(String), nullable=False),
+    Column('passed_over_urls', ARRAY(String), nullable=False),
+    Column('final_click_url', String, nullable=False),
+    Column('final_click_rank', Integer, nullable=False)
 )
 
 query_table = Table('queries', metadata,
     Column('query_id', BigInteger, primary_key=True),
-    Column('search_term_lowercase', String, unique=True),
+    Column('search_term_lowercase', String, unique=True, nullable=False),
 )
 
 dataset_table = Table('datasets', metadata,
     Column('dataset_id', BigInteger, primary_key=True),
-    Column('filename', String),
+    Column('filename', String, nullable=False),
     Column('latest_run', Boolean, default=True),
     Column('date_loaded', Date, server_default=func.now()),
 )
@@ -51,6 +51,9 @@ def update_previous_runs(conn, input_filename):
     result = conn.execute(stmt)
     logging.info(f'Marked {result.rowcount} previous versions of this dataset as outdated')
 
+def delete_old_data(conn):
+    stmt = dataset_table.delete().where(dataset_table.c.latest_run == False)
+    conn.execute(stmt)
 
 def insert_session_into_database(search_session, conn, input_filename):
     """
