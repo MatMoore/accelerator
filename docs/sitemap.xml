@@ -8,6 +8,11 @@
   </url>
   
   <url>
+    <loc>https://matmoore.github.io/accelerator/post/week-4-update/</loc>
+    <lastmod>2018-04-08T10:00:00+00:00</lastmod>
+  </url>
+  
+  <url>
     <loc>https://matmoore.github.io/accelerator/post/not-getting-data/</loc>
     <lastmod>2018-04-02T14:00:00+00:00</lastmod>
   </url>
@@ -64,6 +69,12 @@
   
   <url>
     <loc>https://matmoore.github.io/accelerator/tags/week-3/</loc>
+    <lastmod>2018-04-08T10:00:00+00:00</lastmod>
+    <priority>0</priority>
+  </url>
+  
+  <url>
+    <loc>https://matmoore.github.io/accelerator/tags/week-4/</loc>
     <lastmod>2018-04-08T10:00:00+00:00</lastmod>
     <priority>0</priority>
   </url>

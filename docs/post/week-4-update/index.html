@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en-gb">
+
+  <head>
+    <meta charset="utf-8">
+    <meta name="generator" content="Hugo 0.38.2" />
+
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="author" content="">
+    <meta property="og:url" content="https://matmoore.github.io/accelerator/post/week-4-update/">
+
+    <title>Week 4 update - Accelerator project journal</title>
+    <meta property="og:title" content="Week 4 update - Accelerator project journal">
+    <meta property="og:type" content="article">
+    <meta name="description" content="">
+
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Code+Pro|Arvo:400,700">
+    <link rel="stylesheet" href="../../css/highlight.css">
+    <link rel="stylesheet" href="../../css/journal.css">
+    <link href="../../index.xml" rel="alternate" type="application/rss+xml" title="Accelerator project journal">
+
+  </head>
+
+  <body>
+    <div class="container">
+
+      <nav class="site-nav">
+        <a href="https://matmoore.github.io/accelerator/">Index</a>
+      </nav>
+
+  <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+  </script>
+  <article class="post">
+    <header class="post-header">
+      <h1 class="post-title">Week 4 update <span class="tag">Week 4</span></h1>
+      <time class="post-date" datetime="2018-04-08 10:00:00 UTC">08 Apr 2018</time>
+
+    </header>
+    
+
+<p>I postponed my project day on week 4, and I&rsquo;m going to make up the time next week instead. This week I joined a new team at work, and I also had some data issues to work out, so I thought I&rsquo;d make better use of my time this way. I can hopefully work on it uninterrupted on Thursday and Friday.</p>
+
+<p>So this week I&rsquo;ve just been working on the project when I&rsquo;ve had free time, but I&rsquo;ve written code to extract the data I need and I&rsquo;ve also loaded it into a postgres database so it&rsquo;s easier for me to query. I finally have API access to the BigQuery export, which is what I wanted to use to get the data. In week 3 I tried using the google analytics API instead, but I ran into a lot of problems with daily and hourly quotas that limited how much data I could actually gather.</p>
+
+<p>Unfortunately I&rsquo;d assumed all the Ecommerce data was there in BigQuery, but it wasn&rsquo;t. It turns out this data is only exported if you enable a setting in GA, which we hadn&rsquo;t switched on until I noticed it. So rather than a year&rsquo;s worth of data, I have just over a week&rsquo;s worth.</p>
+
+<h2 id="limitations-of-this-data">Limitations of this data</h2>
+
+<p>With this dataset, only the top 100 or so queries have over 1000 sessions, but it&rsquo;s still quite useful:</p>
+
+<ul>
+<li>I can still use these queries to benchmark search performance when making changes</li>
+<li>I can also suggest &ldquo;best bets&rdquo; (results that should always be forced to the top for high volume queries)</li>
+</ul>
+
+<p>I think it makes it harder to implement learning to rank, which is what I&rsquo;d really like to try out, although I will accumulate more data as time goes on.</p>
+
+<p>I think I need to do some grouping of queries so that queries are essentially the same (and are treated the same by the search engine) are counted as one query by my code. I think the easiest way to do this would be to apply the same tokenisation steps Elasticsearch uses.</p>
+
+<p>Some of the top queries are quite hard to improve - people search for things like &ldquo;log in&rdquo;, or &ldquo;contact&rdquo;, which search has no context for. So the best result we can come up here will just be a popular service or department home page.</p>
+
+<p>We also get a lot of queries that look like postcodes - we sanitise any data that could be personally identifiable before reporting it to google analytics, so it shows up in my dataset as &ldquo;[postcode]&ldquo;. I found it strange that a significant number of users would actually put postcodes in there, but the regex we&rsquo;re using to detect postcodes is quite permissive: <code>/[A-PR-UWYZ][A-HJ-Z]?[0-9][0-9A-HJKMNPR-Y]?(?:[\s+]|%20)*[0-9][ABD-HJLNPQ-Z]{2}/gi</code>. I think it&rsquo;s possible that this also matches some form names.</p>
+
+<h2 id="what-i-ve-implemented-so-far">What I&rsquo;ve implemented so far</h2>
+
+<p>I&rsquo;ve started to implement estimation of document relevance using the simplified DBN model. I&rsquo;ve gotten to the point where I can spit out a new ranking, but I haven&rsquo;t tested the model yet, and I expect my code is quite buggy.</p>
+
+<p>Interestingly my code thinks the most relevant documents for &ldquo;self assessment&rdquo; are <a href="https://www.gov.uk/government/collections/self-assessment-helpsheets-main-self-assessment-tax-return">Self Assessment forms and helpsheets: main Self Assessment tax return</a>  and <a href="https://www.gov.uk/government/collections/self-assessment-hmrc-manuals">Self Assessment: HMRC manuals</a> which are at the bottom of the results page at the moment. The third most relevant is currently the 5th result. If this isn&rsquo;t a bug, it would suggest the first page of search results is really unhelpful at the moment.</p>
+
+
+  </article>
+
+
+      <footer class="site-footer">
+        <span itemscope itemtype="http://schema.org/Person">
+          <link itemprop="url" href="https://matmoore.github.io/accelerator/">
+          <span itemprop="name"></span>
+
+          <br>
+
+          
+
+          
+
+          
+        </span>
+
+        
+      </footer>
+    </div>
+
+  <script src="../../js/highlight.pack.js"></script>
+  <script>hljs.initHighlightingOnLoad();</script>
+
+  </body>
+</html>
+

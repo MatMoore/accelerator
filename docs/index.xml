@@ -23,6 +23,16 @@ Overview of the paper The Dynamic Bayesian Network model is one of many click mo
     </item>
     
     <item>
+      <title>Week 4 update</title>
+      <link>https://matmoore.github.io/accelerator/post/week-4-update/</link>
+      <pubDate>Sun, 08 Apr 2018 10:00:00 +0000</pubDate>
+      
+      <guid>https://matmoore.github.io/accelerator/post/week-4-update/</guid>
+      <description>I postponed my project day on week 4, and I&amp;rsquo;m going to make up the time next week instead. This week I joined a new team at work, and I also had some data issues to work out, so I thought I&amp;rsquo;d make better use of my time this way. I can hopefully work on it uninterrupted on Thursday and Friday.
+So this week I&amp;rsquo;ve just been working on the project when I&amp;rsquo;ve had free time, but I&amp;rsquo;ve written code to extract the data I need and I&amp;rsquo;ve also loaded it into a postgres database so it&amp;rsquo;s easier for me to query.</description>
+    </item>
+    
+    <item>
       <title>Data problems</title>
       <link>https://matmoore.github.io/accelerator/post/not-getting-data/</link>
       <pubDate>Mon, 02 Apr 2018 14:00:00 +0000</pubDate>
