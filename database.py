@@ -99,6 +99,7 @@ def get_searches(conn, input_filename):
         [
             search_table.c.id,
             search_table.c.final_click_url,
+            search_table.c.clicked_urls,
             search_table.c.final_click_rank,
             query_table.c.search_term_lowercase,
         ]
