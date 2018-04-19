@@ -35,6 +35,14 @@ dataset_table = Table('datasets', metadata,
     Column('date_loaded', Date, server_default=func.now()),
 )
 
+# Import this from the data warehouse
+content_item_table = Table('content_items', metadata,
+    Column('id', BigInteger, primary_key=True),
+    Column('content_id', String, nullable=False),
+    Column('base_path', String, nullable=False),
+    Column('title', String, nullable=True),
+)
+
 def setup_database():
     """
     Ensure all tables exist and get a connection
@@ -145,3 +153,19 @@ def get_clicked_urls(conn, input_filename):
     )
 
     return pd.read_sql(stmt, conn, index_col='id')
+
+
+def get_content_items(conn):
+    stmt = select(
+        [
+            content_item_table.c.content_id,
+            content_item_table.c.base_path,
+            content_item_table.c.title
+        ]
+    )
+
+    return pd.read_sql(stmt, conn, index_col='content_id')
+
+
+if __name__ == '__main__':
+    setup_database()

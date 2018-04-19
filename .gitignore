@@ -110,7 +110,7 @@ data/
 
 notebooks/
 *.log
-*.csv
+/*.csv
 *.txt
 *.json
 *.tar
