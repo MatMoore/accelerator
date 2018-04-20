@@ -219,4 +219,8 @@ if __name__ == '__main__':
     tester = ModelTester(model)
     summary = tester.evaluate(test_set)
 
+    example_results = model.relevance('self assessment').sort_values(ascending=False)
+    with_titles = example_results.to_frame().merge(content_items, how='left', left_index=True, right_index=True)
+    with_titles = with_titles.rename({0: 'relevance'}, axis='columns')
+    with_titles = with_titles.sort_values('relevance', ascending=False)
     import pdb; pdb.set_trace()
