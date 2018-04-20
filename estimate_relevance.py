@@ -23,16 +23,42 @@ class SimplifiedDBNModel:
         clicked_urls = clicked_urls[clicked_urls.index.isin(training_set.index)]
         clicked_urls = clicked_urls.groupby(['search_term_lowercase', 'result']).size()
 
+        clicked_urls_error = clicked_urls.pow(1/2)
+
         passed_over_urls = passed_over_urls[passed_over_urls.index.isin(training_set.index)]
         passed_over_urls = passed_over_urls.groupby(['search_term_lowercase', 'result']).size()
+
+        passed_over_urls_error = passed_over_urls.pow(1/2)
 
         final_clicked_urls = training_set.groupby(['search_term_lowercase', 'final_click_url']).size()
         final_clicked_urls.index.names = ['search_term_lowercase', 'result']
 
-        examined_urls = (passed_over_urls + clicked_urls).fillna(passed_over_urls).fillna(clicked_urls)
+        final_clicked_urls_error = final_clicked_urls.pow(1/2)
 
-        self.attractiveness = clicked_urls.divide(examined_urls, fill_value=0)
-        self.satisfyingness = final_clicked_urls.divide(clicked_urls, fill_value=0)
+        examined_urls = (passed_over_urls + clicked_urls).fillna(passed_over_urls).fillna(clicked_urls)
+        examined_urls_error = (passed_over_urls_error ** 2 + clicked_urls_error ** 2).pow(1/2)
+
+        attractiveness = clicked_urls.divide(examined_urls).fillna(0)
+        satisfyingness = final_clicked_urls.divide(clicked_urls).fillna(0)
+
+        attractiveness_error = attractiveness * (
+            clicked_urls_error.divide(clicked_urls).fillna(0).pow(2).add(
+                examined_urls_error.divide(examined_urls).fillna(0).pow(2),
+                fill_value=0
+            )
+        ).pow(1/2)
+
+        satisfyingness_error = satisfyingness * (
+            final_clicked_urls_error.divide(final_clicked_urls).fillna(0).pow(2).add(
+                clicked_urls_error.divide(clicked_urls).fillna(0).pow(2),
+                fill_value=0
+            )
+        ).pow(1/2)
+
+        self.attractiveness = attractiveness
+        self.attractiveness_error = attractiveness_error
+        self.satisfyingness = satisfyingness
+        self.satisfyingness_error = satisfyingness_error
 
     def relevance(self, query):
         """
@@ -42,7 +68,23 @@ class SimplifiedDBNModel:
               so would have a large error. We should use the lower side of the error bar
               for relevance.
         """
-        return self.attractiveness[query].multiply(self.satisfyingness[query], fill_value=0).sort_values(ascending=False)
+        attractiveness = self.attractiveness[query]
+        satisfyingness = self.satisfyingness[query]
+        attractiveness_error = self.attractiveness_error[query]
+        satisfyingness_error = self.satisfyingness_error[query]
+
+        relevance = attractiveness.multiply(satisfyingness, fill_value=0).sort_values(ascending=False)
+
+        relevance_error = relevance.multiply(
+            attractiveness_error.divide(attractiveness).fillna(0).pow(2).add(
+                satisfyingness_error.divide(satisfyingness).fillna(0).pow(2),
+                fill_value=0
+            ),
+            fill_value=0
+        ).pow(1/2)
+
+        relevance = (relevance - relevance_error).clip(lower=0)
+        return relevance
 
 
 class QueryDocumentRanker:
