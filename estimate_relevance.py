@@ -12,7 +12,7 @@ import logging
 from database import setup_database, get_searches, get_clicked_urls, get_passed_over_urls, get_content_items
 from sklearn.model_selection import train_test_split
 
-logging.basicConfig(filename='estimate_relevance.log',level=logging.INFO)
+logging.basicConfig(filename='estimate_relevance.log', level=logging.INFO)
 
 
 class SimplifiedDBNModel:
@@ -23,17 +23,20 @@ class SimplifiedDBNModel:
         clicked_urls = clicked_urls[clicked_urls.index.isin(training_set.index)]
         clicked_urls = clicked_urls.groupby(['search_term_lowercase', 'result']).size()
 
-        clicked_urls_error = clicked_urls.pow(1/2)
+        query_clicked_urls_error = clicked_urls.groupby(['search_term_lowercase']).std()
+        clicked_urls_error = clicked_urls.to_frame().apply(lambda row: query_clicked_urls_error[row.name[0]], axis=1)
 
         passed_over_urls = passed_over_urls[passed_over_urls.index.isin(training_set.index)]
         passed_over_urls = passed_over_urls.groupby(['search_term_lowercase', 'result']).size()
 
-        passed_over_urls_error = passed_over_urls.pow(1/2)
+        query_passed_over_urls_error = passed_over_urls.groupby(['search_term_lowercase']).std()
+        passed_over_urls_error = passed_over_urls.to_frame().apply(lambda row: query_passed_over_urls_error[row.name[0]], axis=1)
 
         final_clicked_urls = training_set.groupby(['search_term_lowercase', 'final_click_url']).size()
         final_clicked_urls.index.names = ['search_term_lowercase', 'result']
 
-        final_clicked_urls_error = final_clicked_urls.pow(1/2)
+        query_final_clicked_urls_error = final_clicked_urls.groupby(['search_term_lowercase']).std()
+        final_clicked_urls_error = final_clicked_urls.to_frame().apply(lambda row: query_final_clicked_urls_error[row.name[0]], axis=1)
 
         examined_urls = (passed_over_urls + clicked_urls).fillna(passed_over_urls).fillna(clicked_urls)
         examined_urls_error = (passed_over_urls_error ** 2 + clicked_urls_error ** 2).pow(1/2)
@@ -63,10 +66,6 @@ class SimplifiedDBNModel:
     def relevance(self, query):
         """
         Calculate the relevance of all documents that have been returned by a query
-
-        TODO: this needs to take into account error: some documents have very low counts,
-              so would have a large error. We should use the lower side of the error bar
-              for relevance.
         """
         attractiveness = self.attractiveness[query]
         satisfyingness = self.satisfyingness[query]
@@ -83,7 +82,8 @@ class SimplifiedDBNModel:
             fill_value=0
         ).pow(1/2)
 
-        relevance = (relevance - relevance_error).clip(lower=0)
+        relevance = (relevance - relevance_error)
+        import pdb; pdb.set_trace()
         return relevance
 
 
@@ -103,7 +103,7 @@ class QueryDocumentRanker:
         try:
             return self.query_rankings[query]
         except KeyError:
-            ranking = self.model.relevance(query).rank(method= 'min', ascending=False)
+            ranking = self.model.relevance(query).rank(method='first', ascending=False)
             self.query_rankings[query] = ranking
             return ranking
 
