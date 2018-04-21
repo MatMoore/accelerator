@@ -4,13 +4,13 @@ a dynamic bayesian network to predict what users click on last.
 We assume that the user continued clicking on things until they
 found what they were looking for.
 """
-from collections import Counter
 import pandas as pd
 import sys
 import os
 import logging
 from database import setup_database, get_searches, get_clicked_urls, get_passed_over_urls, get_content_items
 from sklearn.model_selection import train_test_split
+from checks import SeriesProperties
 
 logging.basicConfig(filename='estimate_relevance.log',level=logging.INFO)
 
@@ -26,13 +26,40 @@ class SimplifiedDBNModel:
         passed_over_urls = passed_over_urls[passed_over_urls.index.isin(training_set.index)]
         passed_over_urls = passed_over_urls.groupby(['search_term_lowercase', 'result']).size()
 
-        final_clicked_urls = training_set.groupby(['search_term_lowercase', 'final_click_url']).size()
-        final_clicked_urls.index.names = ['search_term_lowercase', 'result']
+        chosen_urls = training_set.groupby(['search_term_lowercase', 'final_click_url']).size()
+        chosen_urls.index.names = ['search_term_lowercase', 'result']
 
-        examined_urls = (passed_over_urls + clicked_urls).fillna(passed_over_urls).fillna(clicked_urls)
+        documents = pd.DataFrame({
+            'clicked': clicked_urls,
+            'passed_over': passed_over_urls,
+            'chosen': chosen_urls
+        })
 
-        self.attractiveness = clicked_urls.divide(examined_urls, fill_value=0)
-        self.satisfyingness = final_clicked_urls.divide(clicked_urls, fill_value=0)
+        documents['clicked'] = documents.clicked.fillna(0)
+        documents['passed_over'] = documents.passed_over.fillna(0)
+        documents['chosen'] = documents.chosen.fillna(0)
+        documents['examined'] = documents.passed_over + documents.clicked
+        documents['attractiveness'] = documents.clicked.divide(documents.examined)
+        documents['satisfyingness'] = documents.chosen.divide(documents.clicked)
+
+        SeriesProperties(documents, 'clicked') \
+            .complete() \
+            .less_than_or_equal_to_column('examined')
+
+        SeriesProperties(documents, 'passed_over') \
+            .complete() \
+            .less_than_or_equal_to_column('examined')
+        
+        SeriesProperties(documents, 'attractiveness') \
+            .complete() \
+            .within_range(0, 1)
+
+        SeriesProperties(documents, 'satisfyingness') \
+            .complete() \
+            .within_range(0, 1)
+
+        self.attractiveness = documents.attractiveness
+        self.satisfyingness = documents.satisfyingness
 
     def relevance(self, query):
         """

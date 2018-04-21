@@ -19,6 +19,7 @@ sqlalchemy = "*"
 "psycopg2" = "*"
 sklearn = "*"
 scipy = "*"
+pytest = "*"
 
 
 [dev-packages]
