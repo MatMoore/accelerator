@@ -50,9 +50,5 @@ class SeriesProperties:
         less_than_or_equal_to_column(self.df, self.col, col2)
         return self
 
-    def satisfies(self, fn):
-        counterexample(fn)
-        return self
-
     def within_range(self, lower, upper):
         within_range(self.df, self.col, lower, upper)
