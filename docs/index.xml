@@ -6,10 +6,31 @@
     <description>Recent content on Accelerator project journal</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en-gb</language>
-    <lastBuildDate>Sun, 08 Apr 2018 10:00:00 +0000</lastBuildDate>
+    <lastBuildDate>Sun, 22 Apr 2018 09:00:01 +0000</lastBuildDate>
     
 	<atom:link href="https://matmoore.github.io/accelerator/index.xml" rel="self" type="application/rss+xml" />
     
+    
+    <item>
+      <title>Half way through - what&#39;s left to do</title>
+      <link>https://matmoore.github.io/accelerator/post/mid-point-plan/</link>
+      <pubDate>Sun, 22 Apr 2018 09:00:01 +0000</pubDate>
+      
+      <guid>https://matmoore.github.io/accelerator/post/mid-point-plan/</guid>
+      <description>I have 6 or 7 weeks left. Which is basically 6 or 7 days + however much of my own time I can spend on it. There&amp;rsquo;s a lot left to do.
+I think there are broadly 5 things for me to focus on, but I don&amp;rsquo;t think I&amp;rsquo;ll be able to achieve everything.
+1. Get more data in  Add in data from the last week Tokenize and stem queries so similar ones can be grouped together Investigate whether it makes sense to group queries with the same result sets  2.</description>
+    </item>
+    
+    <item>
+      <title>Half way through - what I&#39;ve done so far</title>
+      <link>https://matmoore.github.io/accelerator/post/half-way-through/</link>
+      <pubDate>Sun, 22 Apr 2018 09:00:00 +0000</pubDate>
+      
+      <guid>https://matmoore.github.io/accelerator/post/half-way-through/</guid>
+      <description>We are half way through the accelerator program and Thursday morning I had a half day meeting and retrospective with the other accelerants. It was really good to have a chance to talk to everyone, but I&amp;rsquo;m finding the limited time very stressful.
+I&amp;rsquo;m not sure yet whether the program is going to be 11 or 12 weeks, because we started a week late but there is a venue booking for presentations at the end which hasn&amp;rsquo;t been changed yet.</description>
+    </item>
     
     <item>
       <title>Predicting search result relevance with a click model</title>

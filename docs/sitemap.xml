@@ -3,6 +3,16 @@
   xmlns:xhtml="http://www.w3.org/1999/xhtml">
   
   <url>
+    <loc>https://matmoore.github.io/accelerator/post/mid-point-plan/</loc>
+    <lastmod>2018-04-22T09:00:01+00:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>https://matmoore.github.io/accelerator/post/half-way-through/</loc>
+    <lastmod>2018-04-22T09:00:00+00:00</lastmod>
+  </url>
+  
+  <url>
     <loc>https://matmoore.github.io/accelerator/post/dynamic-bayesian-network-model/</loc>
     <lastmod>2018-04-08T10:00:00+00:00</lastmod>
   </url>
@@ -34,13 +44,13 @@
   
   <url>
     <loc>https://matmoore.github.io/accelerator/</loc>
-    <lastmod>2018-04-08T10:00:00+00:00</lastmod>
+    <lastmod>2018-04-22T09:00:01+00:00</lastmod>
     <priority>0</priority>
   </url>
   
   <url>
     <loc>https://matmoore.github.io/accelerator/post/</loc>
-    <lastmod>2018-04-08T10:00:00+00:00</lastmod>
+    <lastmod>2018-04-22T09:00:01+00:00</lastmod>
     <priority>0</priority>
   </url>
   
@@ -76,6 +86,12 @@
   <url>
     <loc>https://matmoore.github.io/accelerator/tags/week-4/</loc>
     <lastmod>2018-04-08T10:00:00+00:00</lastmod>
+    <priority>0</priority>
+  </url>
+  
+  <url>
+    <loc>https://matmoore.github.io/accelerator/tags/week-5/</loc>
+    <lastmod>2018-04-22T09:00:01+00:00</lastmod>
     <priority>0</priority>
   </url>
   
