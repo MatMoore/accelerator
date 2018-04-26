@@ -15,7 +15,7 @@ from checks import SeriesProperties
 
 logging.basicConfig(filename='estimate_relevance.log',level=logging.INFO)
 
-def ratio_error(num, den, num_err, den_err):
+def ratio_error(num, den, num_err, den_err, covariance=0):
     """
     Relative error of a ratio
 
@@ -23,11 +23,12 @@ def ratio_error(num, den, num_err, den_err):
     """
     num_term = num_err.divide(num).replace(np.inf, 0).fillna(0).pow(2)
     den_term = den_err.divide(den).replace(np.inf, 0).fillna(0).pow(2)
-
-    variance = num_term + den_term
+    covariance_term = 2 * np.divide(covariance, (num * den)).replace(np.inf, 0).fillna(0)
+    import pdb; pdb.set_trace()
+    variance = num_term + den_term - covariance_term
     return variance.pow(1/2)
 
-def product_error(a, b, a_err, b_err):
+def product_error(a, b, a_err, b_err, covariance=0):
     """
     Relative error of a product of two values
 
@@ -35,15 +36,16 @@ def product_error(a, b, a_err, b_err):
     """
     a_term = a_err.divide(a).replace(np.inf, 0).fillna(0).pow(2)
     b_term = b_err.divide(b).replace(np.inf, 0).fillna(0).pow(2)
+    covariance_term = 2 * np.divide(covariance, (a * b)).replace(np.inf, 0).fillna(0)
 
-    variance = a_term + b_term
+    variance = a_term + b_term + covariance_term
     return variance.pow(1/2)
 
-def sum_error(a_err, b_err):
+def sum_error(a_err, b_err, covariance=0):
     """
     Absolute error of a sum of two values
     """
-    variance = a_err.pow(2) + b_err.pow(2)
+    variance = a_err.pow(2) + b_err.pow(2) + 2 * covariance
     return variance.pow(1/2)
 
 
@@ -76,16 +78,19 @@ class SimplifiedDBNModel:
         documents['chosen'] = documents.chosen.fillna(0)
         documents['chosen_error'] = documents.chosen.pow(1/2)
 
+        passed_over_clicked_cov = documents.passed_over.cov(documents.clicked)
         documents['examined'] = documents.passed_over + documents.clicked
-        documents['examined_error'] = sum_error(documents.passed_over_error, documents.clicked_error)
+        documents['examined_error'] = sum_error(documents.passed_over_error, documents.clicked_error, passed_over_clicked_cov)
 
+        clicked_examined_cov = documents.clicked.cov(documents.examined)
         documents['attractiveness'] = documents.clicked.divide(documents.examined)
-        documents['attractiveness_error'] = documents.attractiveness * ratio_error(documents.clicked, documents.examined, documents.clicked_error, documents.examined_error)
+        documents['attractiveness_error'] = ratio_error(documents.clicked, documents.examined, documents.clicked_error, documents.examined_error, clicked_examined_cov)
 
         # Some documents have never been clicked, so this can divide by zero. Just set these to 0. They have
         # zero relevance.
+        chosen_clicked_cov = documents.chosen.cov(documents.clicked)
         documents['satisfyingness'] = documents.chosen.divide(documents.clicked).fillna(0)
-        documents['satisfyingness_error'] = documents.satisfyingness * ratio_error(documents.chosen, documents.clicked, documents.chosen_error, documents.clicked_error)
+        documents['satisfyingness_error'] = documents.satisfyingness * ratio_error(documents.chosen, documents.clicked, documents.chosen_error, documents.clicked_error, chosen_clicked_cov)
 
         SeriesProperties(documents, 'clicked') \
             .complete() \
@@ -136,8 +141,10 @@ class SimplifiedDBNModel:
         query_attractiveness_error = self.document_params.attractiveness_error[query]
         query_satisfyingness_error = self.document_params.satisfyingness_error[query]
 
+        attractiveness_satisfyingness_cov = query_attractiveness.cov(query_satisfyingness)
+
         relevance = query_attractiveness.multiply(query_satisfyingness)
-        relevance_error = relevance * product_error(query_attractiveness, query_satisfyingness, query_attractiveness_error, query_satisfyingness_error)
+        relevance_error = relevance * product_error(query_attractiveness, query_satisfyingness, query_attractiveness_error, query_satisfyingness_error, attractiveness_satisfyingness_cov)
 
         lower_bound = relevance.subtract(relevance_error).clip_lower(0)
 
