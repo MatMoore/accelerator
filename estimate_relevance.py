@@ -137,7 +137,7 @@ class ModelTester:
         - Change in rank of the user's preferred document (showing it higher reduces the
           number of URLs the user has to examine to find it)
         """
-        return self._evaluate(test_set).loc[:, ['saved_clicks', 'change_in_rank']]
+        return self._evaluate(test_set)
 
     def _evaluate(self, test_set):
         # TODO: make sure training set contains the same queries as the test set(!)
@@ -241,5 +241,8 @@ if __name__ == '__main__':
     ranker = QueryDocumentRanker(model)
     example = model.relevance('self assessment')
     example_df = example.to_frame('relevance').join(content_items, how='left').loc[:, ['title', 'relevance']].sort_values('relevance', ascending=False)
+
+    evaluation.to_csv('data/week6/2018-04-26-test_set.csv')
+    model.document_params.to_csv('data/week6/2018-04-26-model.csv')
 
     import pdb; pdb.set_trace()
