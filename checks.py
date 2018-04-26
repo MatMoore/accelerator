@@ -1,3 +1,5 @@
+import numpy as np
+
 def counterexample(fn):
     def wrapper(df, *args, **kwargs):
         matches = fn(df, *args, **kwargs)
@@ -11,7 +13,7 @@ def counterexample(fn):
 
 @counterexample
 def complete(df, col):
-    return df[col].isna()
+    return df[col].isna() | df[col].apply(np.isinf)
 
 @counterexample
 def less_than_column(df, col1, col2):

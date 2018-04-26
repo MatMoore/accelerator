@@ -5,6 +5,7 @@ We assume that the user continued clicking on things until they
 found what they were looking for.
 """
 import pandas as pd
+import numpy as np
 import sys
 import os
 import logging
@@ -13,6 +14,37 @@ from sklearn.model_selection import train_test_split
 from checks import SeriesProperties
 
 logging.basicConfig(filename='estimate_relevance.log',level=logging.INFO)
+
+def ratio_error(num, den, num_err, den_err):
+    """
+    Relative error of a ratio
+
+    If either num or den are zero, their contributions to the error will be zero
+    """
+    num_term = num_err.divide(num).replace(np.inf, 0).fillna(0).pow(2)
+    den_term = den_err.divide(den).replace(np.inf, 0).fillna(0).pow(2)
+
+    variance = num_term + den_term
+    return variance.pow(1/2)
+
+def product_error(a, b, a_err, b_err):
+    """
+    Relative error of a product of two values
+
+    If either a or b are zero, their contributions to the error will be zero
+    """
+    a_term = a_err.divide(a).replace(np.inf, 0).fillna(0).pow(2)
+    b_term = b_err.divide(b).replace(np.inf, 0).fillna(0).pow(2)
+
+    variance = a_term + b_term
+    return variance.pow(1/2)
+
+def sum_error(a_err, b_err):
+    """
+    Absolute error of a sum of two values
+    """
+    variance = a_err.pow(2) + b_err.pow(2)
+    return variance.pow(1/2)
 
 
 class SimplifiedDBNModel:
@@ -36,40 +68,83 @@ class SimplifiedDBNModel:
         })
 
         documents['clicked'] = documents.clicked.fillna(0)
+        documents['clicked_error'] = documents.clicked.pow(1/2)
+
         documents['passed_over'] = documents.passed_over.fillna(0)
+        documents['passed_over_error'] = documents.passed_over.pow(1/2)
+
         documents['chosen'] = documents.chosen.fillna(0)
+        documents['chosen_error'] = documents.chosen.pow(1/2)
+
         documents['examined'] = documents.passed_over + documents.clicked
+        documents['examined_error'] = sum_error(documents.passed_over_error, documents.clicked_error)
+
         documents['attractiveness'] = documents.clicked.divide(documents.examined)
-        documents['satisfyingness'] = documents.chosen.divide(documents.clicked)
+        documents['attractiveness_error'] = documents.attractiveness * ratio_error(documents.clicked, documents.examined, documents.clicked_error, documents.examined_error)
+
+        # Some documents have never been clicked, so this can divide by zero. Just set these to 0. They have
+        # zero relevance.
+        documents['satisfyingness'] = documents.chosen.divide(documents.clicked).fillna(0)
+        documents['satisfyingness_error'] = documents.satisfyingness * ratio_error(documents.chosen, documents.clicked, documents.chosen_error, documents.clicked_error)
 
         SeriesProperties(documents, 'clicked') \
             .complete() \
             .less_than_or_equal_to_column('examined')
 
+        SeriesProperties(documents, 'clicked_error') \
+            .complete() \
+            .less_than_or_equal_to_column('clicked')
+
+        SeriesProperties(documents, 'chosen') \
+            .complete() \
+            .less_than_or_equal_to_column('clicked')
+
+        SeriesProperties(documents, 'chosen_error') \
+            .complete() \
+            .less_than_or_equal_to_column('chosen')
+
         SeriesProperties(documents, 'passed_over') \
             .complete() \
             .less_than_or_equal_to_column('examined')
-        
+
+        SeriesProperties(documents, 'passed_over_error') \
+            .complete() \
+            .less_than_or_equal_to_column('passed_over')
+
         SeriesProperties(documents, 'attractiveness') \
             .complete() \
             .within_range(0, 1)
+
+        SeriesProperties(documents, 'attractiveness_error') \
+            .complete()
 
         SeriesProperties(documents, 'satisfyingness') \
             .complete() \
             .within_range(0, 1)
 
-        self.attractiveness = documents.attractiveness
-        self.satisfyingness = documents.satisfyingness
+        SeriesProperties(documents, 'satisfyingness_error') \
+            .complete()
+
+        self.document_params = documents
 
     def relevance(self, query):
         """
         Calculate the relevance of all documents that have been returned by a query
-
-        TODO: this needs to take into account error: some documents have very low counts,
-              so would have a large error. We should use the lower side of the error bar
-              for relevance.
         """
-        return self.attractiveness[query].multiply(self.satisfyingness[query], fill_value=0).sort_values(ascending=False)
+        query_attractiveness = self.document_params.attractiveness[query]
+        query_satisfyingness = self.document_params.satisfyingness[query]
+        query_attractiveness_error = self.document_params.attractiveness_error[query]
+        query_satisfyingness_error = self.document_params.satisfyingness_error[query]
+
+        relevance = query_attractiveness.multiply(query_satisfyingness)
+        relevance_error = relevance * product_error(query_attractiveness, query_satisfyingness, query_attractiveness_error, query_satisfyingness_error)
+
+        lower_bound = relevance.subtract(relevance_error).clip_lower(0)
+
+        return pd.DataFrame(
+            {'value': relevance, 'error': relevance_error, 'lower': lower_bound},
+            index=relevance.index
+        ).sort_values('lower', ascending=False)
 
 
 class QueryDocumentRanker:
@@ -88,7 +163,7 @@ class QueryDocumentRanker:
         try:
             return self.query_rankings[query]
         except KeyError:
-            ranking = self.model.relevance(query).rank(method= 'min', ascending=False)
+            ranking = self.model.relevance(query).lower.rank(method= 'min', ascending=False)
             self.query_rankings[query] = ranking
             return ranking
 
@@ -106,7 +181,7 @@ class ModelTester:
         - Change in rank of the user's preferred document (showing it higher reduces the
           number of URLs the user has to examine to find it)
         """
-        return self._evaluate(test_set).loc[:, ['saved_clicks', 'change_in_rank']].describe()
+        return self._evaluate(test_set).loc[:, ['saved_clicks', 'change_in_rank']]
 
     def _evaluate(self, test_set):
         # TODO: make sure training set contains the same queries as the test set(!)
@@ -202,6 +277,13 @@ if __name__ == '__main__':
     )
 
     tester = ModelTester(model)
-    summary = tester.evaluate(test_set)
+    evaluation = tester.evaluate(test_set)
+
+    print(f'Median change in rank: {evaluation.change_in_rank.median()} (positive number => majority of users save time)')
+    print(f'Median saved clicks: {evaluation.change_in_rank.median()}')
+
+    ranker = QueryDocumentRanker(model)
+    example = model.relevance('self assessment')
+    example_df = example.join(content_items, how='left').loc[:, ['title', 'value', 'error', 'lower']].sort_values('lower', ascending=False)
 
     import pdb; pdb.set_trace()
