@@ -16,6 +16,24 @@ from checks import SeriesProperties
 logging.basicConfig(filename='estimate_relevance.log',level=logging.INFO)
 
 
+def training_and_test(df):
+    """
+    Split training and test data for each query
+    """
+    train = []
+    test = []
+    for query in queries:
+        query_data = df[df.search_term_lowercase == query]
+        query_train, query_test = train_test_split(query_data, test_size=0.25)
+        train.append(query_train)
+        test.append(query_test)
+
+    training_set = pd.concat(train)
+    test_set = pd.concat(test)
+
+    return training_set, test_set
+
+
 class SimplifiedDBNModel:
     def train(self, training_set, clicked_urls, passed_over_urls):
         """
@@ -220,7 +238,11 @@ if __name__ == '__main__':
     input_filename = sys.argv[1]
 
     df = get_searches(conn, input_filename)
-    training_set, test_set = train_test_split(df, test_size=0.25)
+
+    queries = df.search_term_lowercase.unique()
+
+    training_set, test_set = training_and_test(df)
+
     del df
 
     content_items = get_content_items(conn)
