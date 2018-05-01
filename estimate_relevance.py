@@ -35,7 +35,7 @@ def training_and_test(df):
 
 
 class SimplifiedDBNModel:
-    def train(self, training_set, clicked_urls, passed_over_urls):
+    def train(self, training_set, clicked_urls, passed_over_urls, min_examined=None):
         """
         Train the model. All input datasets should be indexed by the search ID from the DB.
         """
@@ -65,8 +65,9 @@ class SimplifiedDBNModel:
 
         documents['examined'] = documents.passed_over + documents.clicked
 
-        print(f'Ignoring {sum(documents.examined < 50)} query/document pairs out of {len(documents)}')
-        documents = documents[documents.examined > 50] # arbitrary number
+        if min_examined:
+            print(f'Ignoring {sum(documents.examined < min_examined)} query/document pairs out of {len(documents)}')
+            documents = documents[documents.examined > min_examined] # arbitrary number
 
         documents['attractiveness'] = documents.clicked.divide(documents.examined)
 
@@ -143,8 +144,8 @@ class QueryDocumentRanker:
 
 
 class ModelTester:
-    def __init__(self, trained_model):
-        self.ranker = QueryDocumentRanker(trained_model)
+    def __init__(self, ranker):
+        self.ranker = ranker
 
     def evaluate(self, test_set):
         """
@@ -159,12 +160,12 @@ class ModelTester:
 
     def _evaluate(self, test_set):
         # TODO: make sure training set contains the same queries as the test set(!)
-        test_set['saved_clicks'] = test_set.apply(self._count_saved_clicks, axis=1)
-        test_set['change_in_rank'] = test_set.apply(self._change_in_rank_of_preferred_document, axis=1)
+        test_set['saved_clicks'] = test_set.apply(self.count_saved_clicks, axis=1)
+        test_set['change_in_rank'] = test_set.apply(self.change_in_rank_of_preferred_document, axis=1)
 
         return test_set
 
-    def _count_saved_clicks(self, test_row):
+    def count_saved_clicks(self, test_row):
         """
         Evaluate the number of known-bad results that would be avoided if the model's
         preferred ranking was used (because those documents are now ranked below the final clicked one)
@@ -204,7 +205,7 @@ class ModelTester:
 
         return saved_clicks_count
 
-    def _change_in_rank_of_preferred_document(self, test_row):
+    def change_in_rank_of_preferred_document(self, test_row):
         """
         Work out how much the preferred document has gone up or down.
         A positive value indicates that the doc is closer to the top
@@ -254,7 +255,7 @@ if __name__ == '__main__':
         get_passed_over_urls(conn, input_filename),
     )
 
-    tester = ModelTester(model)
+    tester = ModelTester(QueryDocumentRanker(model))
     evaluation = tester.evaluate(test_set)
 
     print(f'Median change in rank: {evaluation.change_in_rank.median()} (positive number => majority of users save time)')
