@@ -1,6 +1,16 @@
 import pandas as pd
+import nltk
+from nltk.tokenize import wordpunct_tokenize
+from nltk.stem.porter import PorterStemmer
 import sys
 import os
+
+porter_stemmer = PorterStemmer()
+
+
+def normalise_search_terms(terms):
+    tokens = wordpunct_tokenize(terms)
+    return ' '.join([porter_stemmer.stem(token) for token in tokens])
 
 
 def filter_out_queries_with_not_enough_sessions(df):
@@ -25,19 +35,24 @@ def filter_out_queries_with_not_enough_sessions(df):
 
 if __name__ == '__main__':
     if len(sys.argv) < 3:
-        print('Usage: python clean_data_from_api.py [input_filename] [output_filename]')
+        print('Usage: python clean_data_from_bigquery.py [input_filename] [output_filename]')
         sys.exit(1)
 
-    df = pd.read_csv(sys.argv[1])
+    # There are a handful of searches for literally "null"
+    # Don't try and interpret that
+    df = pd.read_csv(sys.argv[1], na_filter=False)
 
+    print('Renaming columns')
     df = df.rename(
         {
             'ga:productSku': 'contentIdOrPath',
             'linkPosition': 'rank',
             'sessionId': 'searchSessionId',
+            'searchTerm': 'originalSearchTerm'
         }, axis='columns'
     )
 
+    df['searchTerm'] = df.originalSearchTerm.apply(normalise_search_terms)
     df = filter_out_queries_with_not_enough_sessions(df)
 
     print(f'There are {df.searchSessionId.nunique()} unique sessions in the dataset')
