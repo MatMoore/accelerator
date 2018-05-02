@@ -9,7 +9,7 @@ from sqlalchemy.sql import func, select, insert
 from sqlalchemy.exc import IntegrityError
 import pandas as pd
 
-DATABASE_URL = os.environ.get('DATABASE_URL', 'postgres://localhost/accelerator')
+DATABASE_URL = os.environ.get('DATABASE_URL', 'postgres://localhost/accelerator2')
 engine = sqlalchemy.create_engine(DATABASE_URL)
 metadata = MetaData()
 
