@@ -30,8 +30,7 @@ query_table = Table('queries', metadata,
 
 dataset_table = Table('datasets', metadata,
     Column('dataset_id', BigInteger, primary_key=True),
-    Column('filename', String, nullable=False),
-    Column('latest_run', Boolean, default=True),
+    Column('filename', String, nullable=False, unique=True),
     Column('date_loaded', Date, server_default=func.now()),
 )
 
@@ -51,19 +50,17 @@ def setup_database():
     return engine.connect()
 
 
-def update_previous_runs(conn, input_filename):
+def record_dataset(conn, input_filename):
     """
-    Mark data from previous runs of this file (it can probably be deleted)
+    Create a record of the dataset we loaded from.
+    Returns the ID of the inserted row.
     """
-    stmt = dataset_table.update().values(latest_run=False).where(dataset_table.c.filename == input_filename)
+    stmt = dataset_table.insert().values(filename=input_filename)
     result = conn.execute(stmt)
-    logging.info(f'Marked {result.rowcount} previous versions of this dataset as outdated')
+    return result.inserted_primary_key[0]
 
-def delete_old_data(conn):
-    stmt = dataset_table.delete().where(dataset_table.c.latest_run == False)
-    conn.execute(stmt)
 
-def insert_session_into_database(search_session, conn, input_filename):
+def insert_session_into_database(search_session, conn, dataset_id):
     """
     Load a session summary into the database
     """
@@ -75,10 +72,6 @@ def insert_session_into_database(search_session, conn, input_filename):
         stmt = select([query_table.c.query_id]).where(query_table.c.search_term_lowercase == search_session['searchTerm'])
         result = conn.execute(stmt)
         query_id = result.fetchone()[0]
-
-    stmt = dataset_table.insert().values(filename=input_filename)
-    result = conn.execute(stmt)
-    dataset_id = result.inserted_primary_key[0]
 
     stmt = search_table.insert().values(
         query_id=query_id,
@@ -107,8 +100,6 @@ def get_searches(conn, input_filename):
         search_table.join(dataset_table).join(query_table)
     ).where(
         dataset_table.c.filename == input_filename
-    ).where(
-        dataset_table.c.latest_run == True
     )
 
     return pd.read_sql(stmt, conn, index_col='id')
@@ -128,8 +119,6 @@ def get_passed_over_urls(conn, input_filename):
         search_table.join(dataset_table).join(query_table)
     ).where(
         dataset_table.c.filename == input_filename
-    ).where(
-        dataset_table.c.latest_run == True
     )
 
     return pd.read_sql(stmt, conn, index_col='id')
@@ -149,8 +138,6 @@ def get_clicked_urls(conn, input_filename):
         search_table.join(dataset_table).join(query_table)
     ).where(
         dataset_table.c.filename == input_filename
-    ).where(
-        dataset_table.c.latest_run == True
     )
 
     return pd.read_sql(stmt, conn, index_col='id')

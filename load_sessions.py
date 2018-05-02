@@ -12,7 +12,7 @@ import sys
 import os
 from collections import defaultdict
 import logging
-from database import update_previous_runs, insert_session_into_database, setup_database
+from database import insert_session_into_database, setup_database, record_dataset
 
 logging.basicConfig(filename='load_sessions.log',level=logging.INFO)
 
@@ -104,13 +104,12 @@ if __name__ == '__main__':
     print('Loading input...')
     df = pd.read_csv(input_filename)
 
-    print('Updating metadata for previous runs...')
-    update_previous_runs(conn, input_filename)
-
     print('Creating session map...')
     session_map = sessions_to_observations(df)
 
     print('Processing sessions...')
+    dataset_id = record_dataset(conn, input_filename)
+
     invalid_counter = Counter()
     for session_id in session_map:
         logging.info(session_id)
@@ -121,7 +120,7 @@ if __name__ == '__main__':
             continue
 
         try:
-            insert_session_into_database(session_summary, conn, input_filename)
+            insert_session_into_database(session_summary, conn, dataset_id=dataset_id)
         except Exception:
             logging.exception('Unable to insert into database: {session_summary}')
             invalid_counter['database_errors'] += 1
