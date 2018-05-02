@@ -53,12 +53,8 @@ if __name__ == '__main__':
     )
 
     df['searchTerm'] = df.originalSearchTerm.apply(normalise_search_terms)
-    df = filter_out_queries_with_not_enough_sessions(df)
+    #df = filter_out_queries_with_not_enough_sessions(df)
 
     print(f'There are {df.searchSessionId.nunique()} unique sessions in the dataset')
-
-    # --- Unadressed problems ---
-    #
-    # 1. Similar looking search terms are considered unique (including pluralisations of the same term)
 
     df.to_csv(sys.argv[2], index=False)
