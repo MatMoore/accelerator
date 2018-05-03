@@ -113,7 +113,7 @@ def get_searches(conn, input_filename):
     # To get the skipped URLs, ignore the clicked ones
     df['skipped_urls'] = df.apply(lambda row: [i for i in row.passed_over_urls if i not in row.clicked_urls], axis=1)
 
-    return df.drop(columns=['passed_over_urls'])
+    return df
 
 
 def get_content_items(conn):

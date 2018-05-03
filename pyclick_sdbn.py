@@ -8,15 +8,31 @@ from pyclick.utils.Utils import Utils
 from pyclick.click_models.task_centric.TaskCentricSearchSession import TaskCentricSearchSession
 from pyclick.search_session.SearchResult import SearchResult
 
-from database import setup_database, get_searches, get_clicked_urls, get_passed_over_urls
+from database import setup_database, get_searches
 
 
 def get_sessions():
-    # session = TaskCentricSearchSession(task, query)
-    # result = SearchResult(_result, 0)
-    # session.web_results.append(result)
-    # session.web_results[-1].click = 1
-    return []
+    sessions = []
+
+    conn = setup_database()
+    searches = get_searches(conn, 'data/week4/data_for_one_week_bigquery/cleaned/bigquery_results_20180403_20180411_filtered.csv')
+    for search in searches.itertuples():
+
+        query = search.search_term_lowercase
+        session = TaskCentricSearchSession(query, query)
+        for url in search.passed_over_urls:
+            if url in search.clicked_urls:
+                result = SearchResult(url, 1)
+            else:
+                result = SearchResult(url, 0)
+            session.web_results.append(result)
+
+        result = SearchResult(search.final_click_url, 1)
+        session.web_results.append(result)
+
+        sessions.append(session)
+
+    return sessions
 
 
 if __name__ == "__main__":
