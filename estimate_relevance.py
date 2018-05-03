@@ -13,6 +13,7 @@ from database import setup_database, get_searches, get_content_items
 from sklearn.model_selection import train_test_split
 from checks import SeriesProperties, DataFrameChecker
 from uncertainty import product_relative_error, ratio_relative_error, sum_error
+from clean_data_from_bigquery import normalise_search_terms
 
 logging.basicConfig(filename='estimate_relevance.log',level=logging.INFO)
 
@@ -302,8 +303,10 @@ if __name__ == '__main__':
 
     df = get_searches(conn)
 
+    print('Queries')
     queries = df.search_term_lowercase.unique()
 
+    print('Splitting')
     training_set, test_set = training_and_test(df)
 
     debug = os.environ.get('DEBUG')
@@ -317,9 +320,11 @@ if __name__ == '__main__':
 
     content_items = get_content_items(conn)
 
+    print('Training')
     model = SimplifiedDBNModel()
     model.train(training_set)
 
+    print('Evaluating')
     tester = ModelTester(QueryDocumentRanker(model))
     evaluation = tester.evaluate(test_set)
 

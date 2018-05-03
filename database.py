@@ -27,6 +27,7 @@ search_table = Table('searches', metadata,
 query_table = Table('queries', metadata,
     Column('query_id', BigInteger, primary_key=True),
     Column('search_term_lowercase', String, unique=True, nullable=False),
+    Column('high_volume', Boolean, default=False)
 )
 
 dataset_table = Table('datasets', metadata,
@@ -103,7 +104,9 @@ def get_searches(conn):
         ]
     ).select_from(
         search_table.join(query_table)
-    )
+    ).where(query_table.c.high_volume == True)
+
+    # with foo as (select query_id from queries join searches using (query_id) group by query_id having count(*) > 1000) update queries set high_volume=true from foo where queries.query_id=foo.query_id;
 
     df = pd.read_sql(stmt, conn, index_col='id')
 
