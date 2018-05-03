@@ -95,6 +95,10 @@ def get_searches(conn, input_filename):
             search_table.c.clicked_urls,
             search_table.c.final_click_rank,
             query_table.c.search_term_lowercase,
+
+            # These are arrays
+            search_table.c.passed_over_urls,
+            search_table.c.clicked_urls,
         ]
     ).select_from(
         search_table.join(dataset_table).join(query_table)
@@ -102,45 +106,13 @@ def get_searches(conn, input_filename):
         dataset_table.c.filename == input_filename
     )
 
-    return pd.read_sql(stmt, conn, index_col='id')
+    df = pd.read_sql(stmt, conn, index_col='id')
 
+    # Passed over URLs is everything that is not chosen
+    # To get the skipped URLs, ignore the clicked ones
+    df['skipped_urls'] = df.apply(lambda row: [i for i in row.passed_over_urls if i not in row.clicked_urls], axis=1)
 
-def get_passed_over_urls(conn, input_filename):
-    """
-    Get every query/result pair where the result was passed over
-    """
-    stmt = select(
-        [
-            search_table.c.id,
-            func.unnest(search_table.c.passed_over_urls).label('result'),
-            query_table.c.search_term_lowercase,
-        ]
-    ).select_from(
-        search_table.join(dataset_table).join(query_table)
-    ).where(
-        dataset_table.c.filename == input_filename
-    )
-
-    return pd.read_sql(stmt, conn, index_col='id')
-
-
-def get_clicked_urls(conn, input_filename):
-    """
-    Get every query/result pair where the result was clicked
-    """
-    stmt = select(
-        [
-            search_table.c.id,
-            func.unnest(search_table.c.clicked_urls).label('result'),
-            query_table.c.search_term_lowercase,
-        ]
-    ).select_from(
-        search_table.join(dataset_table).join(query_table)
-    ).where(
-        dataset_table.c.filename == input_filename
-    )
-
-    return pd.read_sql(stmt, conn, index_col='id')
+    return df.drop(columns=['passed_over_urls'])
 
 
 def get_content_items(conn):

@@ -9,7 +9,7 @@ import numpy as np
 import sys
 import os
 import logging
-from database import setup_database, get_searches, get_clicked_urls, get_passed_over_urls, get_content_items
+from database import setup_database, get_searches, get_content_items
 from sklearn.model_selection import train_test_split
 from checks import SeriesProperties, DataFrameChecker
 from uncertainty import product_relative_error, ratio_relative_error, sum_error
@@ -36,19 +36,19 @@ def training_and_test(df):
 
 
 def calculate_examined(documents):
-    documents['cov_clicked_passed_over'] = documents.corr()['clicked']['passed_over'] * documents['passed_over_error'] * documents['clicked_error']
+    documents['cov_clicked_skipped'] = documents.corr()['clicked']['skipped'] * documents['skipped_error'] * documents['clicked_error']
 
-    documents['examined'] = documents.passed_over + documents.clicked
+    documents['examined'] = documents.skipped + documents.clicked
     documents['examined_error'] = sum_error(
         documents.clicked_error,
-        documents.passed_over_error,
-        covariance=documents.cov_clicked_passed_over
+        documents.skipped_error,
+        covariance=documents.cov_clicked_skipped
     )
 
     checker = DataFrameChecker(documents)
     checker.column('examined').complete()
     checker.column('clicked').less_than_or_equal_to_column('examined')
-    checker.column('passed_over').less_than_or_equal_to_column('examined')
+    checker.column('skipped').less_than_or_equal_to_column('examined')
     checker.column('examined_error').less_than_or_equal_to_column('examined')
 
 
@@ -107,37 +107,50 @@ def calculate_relevance(documents):
 
 
 class SimplifiedDBNModel:
-    def train(self, training_set, clicked_urls, passed_over_urls, min_examined=None):
+    def train(self, training_set, min_examined=None):
         """
         Train the model. All input datasets should be indexed by the search ID from the DB.
         """
-        clicked_urls = clicked_urls[clicked_urls.index.isin(training_set.index)]
-        clicked_urls = clicked_urls.groupby(['search_term_lowercase', 'result']).size()
 
-        passed_over_urls = passed_over_urls[passed_over_urls.index.isin(training_set.index)]
-        passed_over_urls = passed_over_urls.groupby(['search_term_lowercase', 'result']).size()
+        # This creates a new row for each element in each clicked_urls list
+        # It is ridiculously slow. Fix this!!!
+        print('Begin magic')
+        clicked_urls = training_set.loc[:, ['clicked_urls', 'search_term_lowercase']]
+        clicked_urls = clicked_urls.set_index('search_term_lowercase').apply(lambda x: x.apply(pd.Series).stack()).reset_index()
+        clicked_urls.drop('level_1', 1)
+        clicked_urls = clicked_urls.rename({'clicked_urls': 'result'}, axis=1)
+        clicked_urls = clicked_urls.groupby(['search_term_lowercase', 'result']).size()
+        print('More magic')
+
+        # Skipped means they didn't choose it but they examined it
+        skipped_urls = training_set.loc[:, ['skipped_urls', 'search_term_lowercase']]
+        skipped_urls = skipped_urls.set_index('search_term_lowercase').apply(lambda x: x.apply(pd.Series).stack()).reset_index()
+        skipped_urls.drop('level_1', 1)
+        skipped_urls = skipped_urls.rename({'skipped_urls': 'result'}, axis=1)
+        skipped_urls = skipped_urls.groupby(['search_term_lowercase', 'result']).size()
+        print('end magic')
 
         chosen_urls = training_set.groupby(['search_term_lowercase', 'final_click_url']).size()
         chosen_urls.index.names = ['search_term_lowercase', 'result']
 
         documents = pd.DataFrame({
             'clicked': clicked_urls,
-            'passed_over': passed_over_urls,
+            'skipped': skipped_urls,
             'chosen': chosen_urls
         })
 
         documents['clicked'] = documents.clicked.fillna(0)
         documents['clicked_error'] = documents.clicked.pow(1/2)
 
-        documents['passed_over'] = documents.passed_over.fillna(0)
-        documents['passed_over_error'] = documents.passed_over.pow(1/2)
+        documents['skipped'] = documents.skipped.fillna(0)
+        documents['skipped_error'] = documents.skipped.pow(1/2)
 
         documents['chosen'] = documents.chosen.fillna(0)
         documents['chosen_error'] = documents.chosen.pow(1/2)
 
         checker = DataFrameChecker(documents)
         checker.column('clicked').complete()
-        checker.column('passed_over').complete()
+        checker.column('skipped').complete()
         checker.column('chosen').complete()
 
         calculate_examined(documents)
@@ -282,9 +295,7 @@ if __name__ == '__main__':
 
     model = SimplifiedDBNModel()
     model.train(
-        training_set,
-        get_clicked_urls(conn, input_filename),
-        get_passed_over_urls(conn, input_filename),
+        training_set
     )
 
     tester = ModelTester(QueryDocumentRanker(model))
