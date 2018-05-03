@@ -13,6 +13,7 @@ from database import setup_database, get_searches, get_clicked_urls, get_passed_
 from sklearn.model_selection import train_test_split
 from checks import SeriesProperties, DataFrameChecker
 from uncertainty import product_relative_error, ratio_relative_error, sum_error
+from clean_data_from_bigquery import normalise_search_terms
 
 logging.basicConfig(filename='estimate_relevance.log',level=logging.INFO)
 
@@ -270,16 +271,20 @@ if __name__ == '__main__':
 
     input_filename = sys.argv[1]
 
+    print('Getting searches')
     df = get_searches(conn, input_filename)
 
+    print('Queries')
     queries = df.search_term_lowercase.unique()
 
+    print('Splitting')
     training_set, test_set = training_and_test(df)
 
     del df
 
     content_items = get_content_items(conn)
 
+    print('Training')
     model = SimplifiedDBNModel()
     model.train(
         training_set,
@@ -287,6 +292,7 @@ if __name__ == '__main__':
         get_passed_over_urls(conn, input_filename),
     )
 
+    print('Evaluating')
     tester = ModelTester(QueryDocumentRanker(model))
     evaluation = tester.evaluate(test_set)
 
@@ -294,10 +300,9 @@ if __name__ == '__main__':
     print(f'Median saved clicks: {evaluation.saved_clicks.median()}')
 
     ranker = QueryDocumentRanker(model)
-    example = model.relevance('self assessment')
+    import pdb; pdb.set_trace()
+    example = model.relevance(normalise_search_terms('self assessment'))
     example_df = example.to_frame('relevance').join(content_items, how='left').loc[:, ['title', 'relevance']].sort_values('relevance', ascending=False)
 
-    evaluation.to_csv('data/week7/pyclick-comparison/2018-04-26-test_set-uncertainty.csv')
-    model.document_params.to_csv('data/week7/pyclick-comparison/2018-04-26-model-uncertainty.csv')
-
-    import pdb; pdb.set_trace()
+    evaluation.to_csv('data/week7/pyclick-comparison/2018-05-03-test_set-uncertainty.csv')
+    model.document_params.to_csv('data/week7/pyclick-comparison/2018-05-03-model-uncertainty.csv')

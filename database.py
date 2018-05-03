@@ -26,6 +26,7 @@ search_table = Table('searches', metadata,
 query_table = Table('queries', metadata,
     Column('query_id', BigInteger, primary_key=True),
     Column('search_term_lowercase', String, unique=True, nullable=False),
+    Column('high_volume', Boolean, default=False)
 )
 
 dataset_table = Table('datasets', metadata,
@@ -98,9 +99,9 @@ def get_searches(conn, input_filename):
         ]
     ).select_from(
         search_table.join(dataset_table).join(query_table)
-    ).where(
-        dataset_table.c.filename == input_filename
-    )
+    ).where(query_table.c.high_volume == True)
+
+    # with foo as (select query_id from queries join searches using (query_id) group by query_id having count(*) > 1000) update queries set high_volume=true from foo where queries.query_id=foo.query_id;
 
     return pd.read_sql(stmt, conn, index_col='id')
 
@@ -117,9 +118,7 @@ def get_passed_over_urls(conn, input_filename):
         ]
     ).select_from(
         search_table.join(dataset_table).join(query_table)
-    ).where(
-        dataset_table.c.filename == input_filename
-    )
+    ).where(query_table.c.high_volume == True)
 
     return pd.read_sql(stmt, conn, index_col='id')
 
@@ -136,9 +135,7 @@ def get_clicked_urls(conn, input_filename):
         ]
     ).select_from(
         search_table.join(dataset_table).join(query_table)
-    ).where(
-        dataset_table.c.filename == input_filename
-    )
+    ).where(query_table.c.high_volume == True)
 
     return pd.read_sql(stmt, conn, index_col='id')
 
