@@ -54,3 +54,11 @@ class SeriesProperties:
 
     def within_range(self, lower, upper):
         within_range(self.df, self.col, lower, upper)
+
+
+class DataFrameChecker:
+    def __init__(self, df):
+        self.df = df
+
+    def column(self, col):
+        return SeriesProperties(self.df, col)

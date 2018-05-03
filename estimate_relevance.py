@@ -11,7 +11,8 @@ import os
 import logging
 from database import setup_database, get_searches, get_clicked_urls, get_passed_over_urls, get_content_items
 from sklearn.model_selection import train_test_split
-from checks import SeriesProperties
+from checks import SeriesProperties, DataFrameChecker
+from uncertainty import product_relative_error, ratio_relative_error, sum_error
 
 logging.basicConfig(filename='estimate_relevance.log',level=logging.INFO)
 
@@ -32,6 +33,77 @@ def training_and_test(df):
     test_set = pd.concat(test)
 
     return training_set, test_set
+
+
+def calculate_examined(documents):
+    documents['cov_clicked_passed_over'] = documents.corr()['clicked']['passed_over'] * documents['passed_over_error'] * documents['clicked_error']
+
+    documents['examined'] = documents.passed_over + documents.clicked
+    documents['examined_error'] = sum_error(
+        documents.clicked_error,
+        documents.passed_over_error,
+        covariance=documents.cov_clicked_passed_over
+    )
+
+    checker = DataFrameChecker(documents)
+    checker.column('examined').complete()
+    checker.column('clicked').less_than_or_equal_to_column('examined')
+    checker.column('passed_over').less_than_or_equal_to_column('examined')
+    checker.column('examined_error').less_than_or_equal_to_column('examined')
+
+
+def calculate_attractiveness(documents):
+    logging.info('Calculating attractiveness parameters')
+
+    documents['cov_clicked_examined'] = documents.corr()['clicked']['examined'] * documents['clicked_error'] * documents['examined_error']
+
+    documents['attractiveness'] = documents.clicked.divide(documents.examined)
+    documents['attractiveness_error'] = documents.attractiveness * ratio_relative_error(
+        documents.clicked, documents.examined,
+        documents.clicked_error, documents.examined_error,
+        covariance=documents.cov_clicked_examined
+    )
+
+    checker = DataFrameChecker(documents)
+    checker.column('attractiveness').complete().within_range(0, 1)
+    checker.column('attractiveness_error').less_than_or_equal_to_column('attractiveness')
+
+
+def calculate_satisfyingness(documents):
+    logging.info('Calculating satisfyingness parameters')
+
+    documents['cov_chosen_clicked'] = documents.corr()['chosen']['clicked'] * documents['chosen_error'] * documents['clicked_error']
+
+    # Some documents have never been clicked, so this can divide by zero. Just set these to 0. They have
+    # zero relevance.
+    documents['satisfyingness'] = documents.chosen.divide(documents.clicked).fillna(0)
+
+    documents['satisfyingness_error'] = documents.satisfyingness * ratio_relative_error(
+        documents.chosen, documents.clicked,
+        documents.chosen_error, documents.clicked_error,
+        covariance=documents.cov_chosen_clicked
+    )
+
+    checker = DataFrameChecker(documents)
+    checker.column('attractiveness').complete().within_range(0, 1)
+    checker.column('satisfyingness_error').less_than_or_equal_to_column('satisfyingness')
+
+
+def calculate_relevance(documents):
+    logging.info('Calculating relevance')
+
+    documents['cov_attractiveness_satisfyingness'] = documents.corr()['attractiveness']['satisfyingness'] * documents['attractiveness_error'] * documents['satisfyingness_error']
+
+    documents['relevance'] = documents.attractiveness * documents.satisfyingness
+    documents['relevance_error'] = documents.relevance * ratio_relative_error(
+        documents.attractiveness, documents.satisfyingness,
+        documents.attractiveness_error, documents.satisfyingness_error,
+        covariance=documents.cov_attractiveness_satisfyingness
+    )
+
+    checker = DataFrameChecker(documents)
+    checker.column('relevance').complete().within_range(0, 1)
+    checker.column('relevance_error').less_than_or_equal_to_column('relevance')
 
 
 class SimplifiedDBNModel:
@@ -63,50 +135,15 @@ class SimplifiedDBNModel:
         documents['chosen'] = documents.chosen.fillna(0)
         documents['chosen_error'] = documents.chosen.pow(1/2)
 
-        documents['examined'] = documents.passed_over + documents.clicked
+        checker = DataFrameChecker(documents)
+        checker.column('clicked').complete()
+        checker.column('passed_over').complete()
+        checker.column('chosen').complete()
 
-        if min_examined:
-            print(f'Ignoring {sum(documents.examined < min_examined)} query/document pairs out of {len(documents)}')
-            documents = documents[documents.examined > min_examined] # arbitrary number
-
-        documents['attractiveness'] = documents.clicked.divide(documents.examined)
-
-        # Some documents have never been clicked, so this can divide by zero. Just set these to 0. They have
-        # zero relevance.
-        documents['satisfyingness'] = documents.chosen.divide(documents.clicked).fillna(0)
-
-        SeriesProperties(documents, 'clicked') \
-            .complete() \
-            .less_than_or_equal_to_column('examined')
-
-        SeriesProperties(documents, 'clicked_error') \
-            .complete() \
-            .less_than_or_equal_to_column('clicked')
-
-        SeriesProperties(documents, 'chosen') \
-            .complete() \
-            .less_than_or_equal_to_column('clicked')
-
-        SeriesProperties(documents, 'chosen_error') \
-            .complete() \
-            .less_than_or_equal_to_column('chosen')
-
-        SeriesProperties(documents, 'passed_over') \
-            .complete() \
-            .less_than_or_equal_to_column('examined')
-
-        SeriesProperties(documents, 'passed_over_error') \
-            .complete() \
-            .less_than_or_equal_to_column('passed_over')
-
-        SeriesProperties(documents, 'attractiveness') \
-            .complete() \
-            .within_range(0, 1)
-
-
-        SeriesProperties(documents, 'satisfyingness') \
-            .complete() \
-            .within_range(0, 1)
+        calculate_examined(documents)
+        calculate_attractiveness(documents)
+        calculate_satisfyingness(documents)
+        calculate_relevance(documents)
 
         self.document_params = documents
 
@@ -114,12 +151,7 @@ class SimplifiedDBNModel:
         """
         Calculate the relevance of all documents that have been returned by a query
         """
-        query_attractiveness = self.document_params.attractiveness[query]
-        query_satisfyingness = self.document_params.satisfyingness[query]
-
-        relevance = query_attractiveness.multiply(query_satisfyingness)
-
-        return relevance.sort_values(ascending=False)
+        return self.document_params.loc[query].relevance.sort_values(ascending=False)
 
 
 class QueryDocumentRanker:
@@ -265,7 +297,7 @@ if __name__ == '__main__':
     example = model.relevance('self assessment')
     example_df = example.to_frame('relevance').join(content_items, how='left').loc[:, ['title', 'relevance']].sort_values('relevance', ascending=False)
 
-    evaluation.to_csv('data/week6/2018-04-26-test_set.csv')
-    model.document_params.to_csv('data/week6/2018-04-26-model.csv')
+    evaluation.to_csv('data/week7/pyclick-comparison/2018-04-26-test_set-uncertainty.csv')
+    model.document_params.to_csv('data/week7/pyclick-comparison/2018-04-26-model-uncertainty.csv')
 
     import pdb; pdb.set_trace()
