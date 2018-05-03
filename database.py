@@ -17,6 +17,7 @@ search_table = Table('searches', metadata,
     Column('id', BigInteger, primary_key=True),
     Column('query_id', None, ForeignKey('queries.query_id', ondelete='CASCADE')),
     Column('dataset_id', None, ForeignKey('datasets.dataset_id', ondelete='CASCADE')),
+    # TODO store all content ids in rank order
     Column('clicked_urls', ARRAY(String), nullable=False),
     Column('passed_over_urls', ARRAY(String), nullable=False),
     Column('final_click_url', String, nullable=False),

@@ -114,3 +114,5 @@ notebooks/
 *.txt
 *.json
 *.tar
+
+PyClick
