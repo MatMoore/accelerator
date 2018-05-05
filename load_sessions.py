@@ -38,7 +38,7 @@ def session_data(input_data, session_map, session_id):
     Return the clicks and impressions for a single session, highest rank first
     """
     indexes = session_map[session_id]
-    rank_order = input_data.loc[indexes].sort_values(by=['rank'], ascending=False)
+    rank_order = input_data.loc[indexes].sort_values(by=['rank'], ascending=True)
     return rank_order
 
 
@@ -59,31 +59,31 @@ def process_session(rank_order, invalid_counter):
         invalid_counter['no_clicks'] += 1
         return None
 
-    final_click_row = clicks.iloc[0]
+    impressions = rank_order[rank_order.observationType == 'impression']
 
+    impressions_ranks = set(impressions['rank'].tolist())
+    if impressions_ranks != set(range(1, 20)):
+        # Discard session if missing impressions
+        logging.info(f'Impression data incomplete up to rank 20')
+        logging.info(impressions_ranks)
+        invalid_counter['missing_impressions'] += 1
+        return None
+
+    final_click_row = clicks.iloc[-1]
     search_term = final_click_row['searchTerm']
     final_url_clicked = final_click_row['contentIdOrPath']
     final_rank = final_click_row['rank']
 
-    passed_over = rank_order[(rank_order.observationType == 'impression') & (rank_order.loc[:, 'rank'] < final_rank)]
-
-    passed_over_ranks = set(passed_over['rank'].tolist())
-    if passed_over_ranks != set(range(1, final_rank)):
-        # Discard session if missing impressions
-        logging.info(f'Impression data incomplete for final rank {final_rank}:')
-        logging.info(passed_over_ranks)
-        invalid_counter['missing_impressions'] += 1
-        return None
-
-    passed_over_results = passed_over.contentIdOrPath.tolist()
+    skipped_results = [i for i in impressions if i not in clicks]
     clicked_results = clicks.contentIdOrPath.tolist()
 
     session = {
         'searchSessionId': session_id,
         'searchTerm': search_term,
         'finalRank': final_rank.item(),
-        'passedOverResults': passed_over_results,
+        'skippedResults': skipped_results,
         'clickedResults': clicked_results,
+        'impressions': impressions,
         'finalItemClicked': final_url_clicked,
     }
 
