@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en-gb">
+
+  <head>
+    <meta charset="utf-8">
+    <meta name="generator" content="Hugo 0.37.1" />
+
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="author" content="">
+    <meta property="og:url" content="https://matmoore.github.io/accelerator/post/half-way-through/">
+
+    <title>Half way through - what I&#39;ve done so far - Accelerator project journal</title>
+    <meta property="og:title" content="Half way through - what I&#39;ve done so far - Accelerator project journal">
+    <meta property="og:type" content="article">
+    <meta name="description" content="">
+
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Code+Pro|Arvo:400,700">
+    <link rel="stylesheet" href="../../css/highlight.css">
+    <link rel="stylesheet" href="../../css/journal.css">
+    <link href="../../index.xml" rel="alternate" type="application/rss+xml" title="Accelerator project journal">
+
+  </head>
+
+  <body>
+    <div class="container">
+
+      <nav class="site-nav">
+        <a href="https://matmoore.github.io/accelerator/">Index</a>
+      </nav>
+
+  <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+  </script>
+  <article class="post">
+    <header class="post-header">
+      <h1 class="post-title">Half way through - what I&#39;ve done so far <span class="tag">Week 5</span></h1>
+      <time class="post-date" datetime="2018-04-22 09:00:00 UTC">22 Apr 2018</time>
+
+    </header>
+    
+
+<p>We are half way through the accelerator program and Thursday morning I had a half day meeting and retrospective with the other accelerants. It was really good to have a chance to talk to everyone, but I&rsquo;m finding the limited time very stressful.</p>
+
+<p>I&rsquo;m not sure yet whether the program is going to be 11 or 12 weeks, because we started a week late but there is a venue booking for presentations at the end which hasn&rsquo;t been changed yet.</p>
+
+<h2 id="where-i-ve-got-to-so-far">Where I&rsquo;ve got to so far</h2>
+
+<ul>
+<li>I&rsquo;ve implemented code to extract the data I need, filter and transform it, and also load it into a PostgreSQL database</li>
+<li>I&rsquo;ve implemented the Simplified Dynamic Bayesian Network (SDBN) click model</li>
+<li>I can generate a new ranking for each query using the model</li>
+<li>I&rsquo;ve tested it with a small dataset covering the top 100 queries (but my model makes things slightly worse at the moment)</li>
+</ul>
+
+<h2 id="challenges">Challenges</h2>
+
+<h3 id="data-i-thought-existed-doesn-t-actually-exist">Data I thought existed doesn&rsquo;t actually exist</h3>
+
+<p>I started the project thinking that a year&rsquo;s worth of data had been exported to BigQuery, but it wasn&rsquo;t. So I only have the data collected since a couple of weeks ago. This means I will have less data on the &ldquo;long tail&rdquo; of search queries, and anything that is seasonal.</p>
+
+<h3 id="managing-data-is-hard">Managing data is hard</h3>
+
+<p>I&rsquo;ve written a lot of my code quite experimentally and accumulated a few different steps that extract, transform or load data. Initially I was a bit lax about naming files and I started to lose track of where each dataset came from. But I&rsquo;ve made to sure to always include the date range used when extracting the data in all my filenames.</p>
+
+<p>Later on I decided to organise everything so I have a directory structure like this:</p>
+
+<pre><code>data/
+     week1/
+           thing_i_did/
+                       raw/
+                       cleaned/
+                       README
+</code></pre>
+
+<p>This is great for storing intermediate datasets because I can go back to stuff I did earlier and still understand it.</p>
+
+<p>However I also want to be able to incrementally fetch and process new data, so now I&rsquo;m storing all the final data in a database, and I query that for training my click models instead of updating a huge CSV.</p>
+
+<h3 id="accounting-for-error">Accounting for error</h3>
+
+<p>What I&rsquo;ve noticed when investigating the results so far is that my code tends to have very unrealistic perceptions of the lowest ranked results. There&rsquo;s a document
+that was clicked only 8 times and skipped twice, and at the moment my model assigns that
+an 80% attractiveness. This makes no sense, because I&rsquo;m generalising from just a few people, who represent less than 1% of the sessions for that query.</p>
+
+<p>I thought about just filtering these out, but my mentor suggested assigning an error so that every relevance judgement has an upper and lower bound. Then I could rank based on
+the lower bounds.</p>
+
+<p>I think you can view the clicked/skipped/final click counts for a document/query pair as coming from a Poisson probability distribution. The expected mean would be the number of searches times some underlying probability, and the standard deviation is the square root of the mean. But I don&rsquo;t know if I can do anything with this. I&rsquo;m only sampling each distribution once, so I don&rsquo;t actually calculate the mean or standard deviation directly.</p>
+
+<p>The other thing I tried was looking at the average and standard deviations of all the counts for individual queries, and using that as a measure of error. I think this is problematic because quantities like number of clicks are typically heavily weighted towards one result - you might have 80% of the clicks in the top couple of results and 20% in the rest, which gives you a huge standard deviation. I tried this on Friday and got terrible results back, so I want to rethink this.</p>
+
+
+  </article>
+
+
+      <footer class="site-footer">
+        <span itemscope itemtype="http://schema.org/Person">
+          <link itemprop="url" href="https://matmoore.github.io/accelerator/">
+          <span itemprop="name"></span>
+
+          <br>
+
+          
+
+          
+
+          
+        </span>
+
+        
+      </footer>
+    </div>
+
+  <script src="../../js/highlight.pack.js"></script>
+  <script>hljs.initHighlightingOnLoad();</script>
+
+  </body>
+</html>
+
