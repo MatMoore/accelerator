@@ -37,7 +37,6 @@ def training_and_test(df):
 
 def calculate_examined(documents):
     documents['cov_clicked_skipped'] = documents.corr()['clicked']['skipped'] * documents['skipped_error'] * documents['clicked_error']
-
     documents['examined'] = documents.skipped + documents.clicked
     documents['examined_error'] = sum_error(
         documents.clicked_error,
@@ -95,16 +94,25 @@ def calculate_relevance(documents):
     documents['cov_attractiveness_satisfyingness'] = documents.corr()['attractiveness']['satisfyingness'] * documents['attractiveness_error'] * documents['satisfyingness_error']
 
     documents['relevance'] = documents.attractiveness * documents.satisfyingness
-    documents['relevance_error'] = documents.relevance * ratio_relative_error(
-        documents.attractiveness, documents.satisfyingness,
-        documents.attractiveness_error, documents.satisfyingness_error,
+    documents['relevance_error'] = documents.relevance * product_relative_error(
+        a=documents.attractiveness,
+        b=documents.satisfyingness,
+        a_err=documents.attractiveness_error,
+        b_err=documents.satisfyingness_error,
         covariance=documents.cov_attractiveness_satisfyingness
     )
 
+    relative_error = (documents.relevance_error / documents.relevance).replace(np.inf, 0).fillna(0)
+    relative_error_a = (documents.attractiveness_error / documents.attractiveness).replace(np.inf, 0).fillna(0)
+    relative_error_s = (documents.satisfyingness_error / documents.satisfyingness).replace(np.inf, 0).fillna(0)
+
+    if sum(relative_error_a > relative_error ** 2) > 0:
+        import pdb; pdb.set_trace()
+    if sum(relative_error_s > relative_error ** 2) > 0:
+        import pdb; pdb.set_trace()
+
     checker = DataFrameChecker(documents)
     checker.column('relevance').complete().within_range(0, 1)
-    checker.column('relevance_error').less_than_or_equal_to_column('relevance')
-
 
 class SimplifiedDBNModel:
     def train(self, training_set, min_examined=None):

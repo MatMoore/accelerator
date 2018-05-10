@@ -2,36 +2,22 @@ import pandas as pd
 import pytest
 from estimate_relevance import SimplifiedDBNModel, ModelTester
 
+
 example_search = pd.DataFrame(
     {
         'final_click_url': ['a', 'c', 'a', 'b', 'c'],
         'clicked_urls': [['a'], ['c'], ['a'], ['a', 'b'], ['b', 'c']],
+        'skipped_urls': [[], ['a', 'b'], [], [], ['a']],
         'final_click_rank': [1, 3, 1, 2, 3],
         'search_term_lowercase': ['foo'] * 5
     },
     index=[1, 2, 3, 4, 5]
 )
 
-example_clicks = pd.DataFrame(
-    {
-        'result': ['a', 'c', 'a', 'a', 'b', 'b', 'c'],
-        'search_term_lowercase': ['foo'] * 7
-    },
-    index=[1, 2, 3, 4, 4, 5, 5]
-)
-
-example_skips = pd.DataFrame(
-    {
-        'result': ['a', 'b', 'a'],
-        'search_term_lowercase': ['foo'] * 3
-    },
-    index=[2, 2, 5]
-)
-
 
 def test_attractiveness_ratio():
     model = SimplifiedDBNModel()
-    model.train(example_search, example_clicks, example_skips)
+    model.train(example_search)
 
     assert model.document_params.attractiveness['foo']['a'] == 0.6
     assert model.document_params.attractiveness['foo']['b'] == 2/3
@@ -40,11 +26,34 @@ def test_attractiveness_ratio():
 
 def test_satisfyingness_ratio():
     model = SimplifiedDBNModel()
-    model.train(example_search, example_clicks, example_skips)
+    model.train(example_search)
 
     assert model.document_params.satisfyingness['foo']['a'] == 2/3
     assert model.document_params.satisfyingness['foo']['b'] == 0.5
     assert model.document_params.satisfyingness['foo']['c'] == 1
+
+
+def test_error_of_barely_seen_hit():
+    model = SimplifiedDBNModel()
+    model.train(example_search)
+
+    assert model.document_params.clicked['foo']['c'] == 2
+    assert model.document_params.clicked_error['foo']['c'] == 2**0.5
+
+    assert model.document_params.skipped['foo']['c'] == 0
+    assert model.document_params.skipped_error['foo']['c'] == 0
+
+    assert model.document_params.examined['foo']['c'] == 2
+    assert model.document_params.examined_error['foo']['c'] == 2**0.5
+
+    cov = model.document_params.cov_clicked_examined['foo']['c']
+    assert model.document_params.attractiveness['foo']['c'] == 1
+
+    rel1 = 2**0.5/2
+    rel2 = 2**0.5/2
+    rel_cov = cov/4
+    expected_error = 1 * (rel1 ** 2 + rel2 ** 2 - 2 * rel_cov) ** 0.5
+    assert model.document_params.attractiveness_error['foo']['c'] == expected_error
 
 
 class DummyRanker:
