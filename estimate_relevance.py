@@ -48,7 +48,8 @@ def calculate_examined(documents):
     checker.column('examined').complete()
     checker.column('clicked').less_than_or_equal_to_column('examined')
     checker.column('skipped').less_than_or_equal_to_column('examined')
-    checker.column('examined_error').less_than_or_equal_to_column('examined')
+    checker.column('examined_error').greater_than_or_equal_to_column('clicked_error')
+    checker.column('examined_error').greater_than_or_equal_to_column('skipped_error')
 
 
 def calculate_attractiveness(documents):
@@ -84,7 +85,7 @@ def calculate_satisfyingness(documents):
     )
 
     checker = DataFrameChecker(documents)
-    checker.column('attractiveness').complete().within_range(0, 1)
+    checker.column('satisfyingness').complete().within_range(0, 1)
     checker.column('satisfyingness_error').less_than_or_equal_to_column('satisfyingness')
 
 
@@ -106,9 +107,9 @@ def calculate_relevance(documents):
     relative_error_a = (documents.attractiveness_error / documents.attractiveness).replace(np.inf, 0).fillna(0)
     relative_error_s = (documents.satisfyingness_error / documents.satisfyingness).replace(np.inf, 0).fillna(0)
 
-    if sum(relative_error_a > relative_error ** 2) > 0:
+    if sum(relative_error_a > relative_error) > 0:
         import pdb; pdb.set_trace()
-    if sum(relative_error_s > relative_error ** 2) > 0:
+    if sum(relative_error_s > relative_error) > 0:
         import pdb; pdb.set_trace()
 
     checker = DataFrameChecker(documents)
