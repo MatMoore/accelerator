@@ -107,16 +107,20 @@ def calculate_relevance(documents):
     relative_error_a = (documents.attractiveness_error / documents.attractiveness).replace(np.inf, 0).fillna(0)
     relative_error_s = (documents.satisfyingness_error / documents.satisfyingness).replace(np.inf, 0).fillna(0)
 
-    if sum(relative_error_a > relative_error) > 0:
-        import pdb; pdb.set_trace()
-    if sum(relative_error_s > relative_error) > 0:
-        import pdb; pdb.set_trace()
-
     checker = DataFrameChecker(documents)
     checker.column('relevance').complete().within_range(0, 1)
 
+    # Relevance error should be greater than the component errors
+    if sum((documents.relevance > 0) & (relative_error_a > relative_error)) > 0:
+        import pdb; pdb.set_trace()
+    if sum((documents.relevance > 0) & (relative_error_s > relative_error)) > 0:
+        import pdb; pdb.set_trace()
+
+    documents['relevance_low'] = (documents.relevance - documents.relevance_error).clip_lower(0)
+
+
 class SimplifiedDBNModel:
-    def train(self, training_set, min_examined=None):
+    def train(self, training_set):
         """
         Train the model. All input datasets should be indexed by the search ID from the DB.
         """
@@ -173,7 +177,7 @@ class SimplifiedDBNModel:
         """
         Calculate the relevance of all documents that have been returned by a query
         """
-        return self.document_params.loc[query].relevance.sort_values(ascending=False)
+        return self.document_params.loc[query].relevance_low.sort_values(ascending=False)
 
 
 class QueryDocumentRanker:
@@ -310,14 +314,13 @@ if __name__ == '__main__':
     tester = ModelTester(QueryDocumentRanker(model))
     evaluation = tester.evaluate(test_set)
 
-    print(f'Median change in rank: {evaluation.change_in_rank.median()} (positive number => majority of users save time)')
+    print(f'Median change in rank: {evaluation.change_in_rank.mean()}')
     print(f'Median saved clicks: {evaluation.saved_clicks.median()}')
 
     ranker = QueryDocumentRanker(model)
-    example = model.relevance('self assessment')
-    example_df = example.to_frame('relevance').join(content_items, how='left').loc[:, ['title', 'relevance']].sort_values('relevance', ascending=False)
+    example = model.document_params.loc['self assessment'].join(content_items).sort_values('relevance_low', ascending=False)
 
-    evaluation.to_csv('data/week7/pyclick-comparison/2018-04-26-test_set-uncertainty.csv')
-    model.document_params.to_csv('data/week7/pyclick-comparison/2018-04-26-model-uncertainty.csv')
+    evaluation.to_csv('data/week7/pyclick-comparison/2018-04-26-test_set-uncertainty2.csv')
+    model.document_params.to_csv('data/week7/pyclick-comparison/2018-04-26-model-uncertainty2.csv')
 
     import pdb; pdb.set_trace()
