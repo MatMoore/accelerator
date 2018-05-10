@@ -269,6 +269,16 @@ class ModelTester:
         A positive value indicates that the doc is closer to the top
         (so the user is assumed to examine less before finding it).
         A negative value indicates that the doc is further down the page.
+
+        But:
+        - More of the tests set have seen the results closer to the top
+        - Less of the test set have seen the results closer to the bottom
+        - The distribution of final clicks is biased by this
+
+        To counteract this, weight improvements higher if the original
+        rank was higher.
+
+        TODO: does this make any sense?
         """
         query = test_row.search_term_lowercase
         new_ranking = self.ranker.rank(query)
@@ -284,7 +294,7 @@ class ModelTester:
             # really saying anything about its new rank. So just ignore it.
             return 0
 
-        return old_rank - new_rank
+        return (old_rank - new_rank) * old_rank
 
 if __name__ == '__main__':
     if len(sys.argv) < 2:
