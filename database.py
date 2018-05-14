@@ -5,7 +5,7 @@ import os
 import logging
 import sqlalchemy
 from sqlalchemy import Table, Column, BigInteger, Integer, Boolean, String, Date, MetaData, ForeignKey, ARRAY
-from sqlalchemy.sql import func, select, insert
+from sqlalchemy.sql import func, select, insert, except_
 from sqlalchemy.exc import IntegrityError
 import pandas as pd
 
@@ -94,7 +94,6 @@ def get_searches(conn):
         [
             search_table.c.id,
             search_table.c.final_click_url,
-            search_table.c.clicked_urls,
             search_table.c.final_click_rank,
             query_table.c.search_term_lowercase,
 
@@ -110,11 +109,53 @@ def get_searches(conn):
 
     df = pd.read_sql(stmt, conn, index_col='id')
 
-    # Passed over URLs is everything that is not chosen
-    # To get the skipped URLs, ignore the clicked ones
-    df['skipped_urls'] = df.apply(lambda row: [i for i in row.passed_over_urls if i not in row.clicked_urls], axis=1)
-
     return df
+
+
+def get_skipped_urls(conn):
+    """
+    Get every query/result pair where the result was skipped
+
+    This is done by unnesting everything so we have (session, result, query) tuples,
+    and then excluding any clicked tuples from the passed over tuples.
+    It probably makes sense(?)
+    """
+    passed_over = select(
+        [
+            search_table.c.id,
+            func.unnest(search_table.c.passed_over_urls).label('result'),
+            query_table.c.search_term_lowercase,
+        ]
+    ).select_from(
+        search_table.join(query_table)
+    ).where(query_table.c.high_volume == True)
+
+    clicked = clicked_urls_query()
+
+    stmt = except_(passed_over, clicked)
+
+    return pd.read_sql(stmt, conn, index_col='id')
+
+
+def get_clicked_urls(conn):
+    """
+    Get every query/result pair where the result was clicked
+    """
+    stmt = clicked_urls_query()
+
+    return pd.read_sql(stmt, conn, index_col='id')
+
+
+def clicked_urls_query():
+    return select(
+        [
+            search_table.c.id,
+            func.unnest(search_table.c.clicked_urls).label('result'),
+            query_table.c.search_term_lowercase,
+        ]
+    ).select_from(
+        search_table.join(query_table)
+    ).where(query_table.c.high_volume == True)
 
 
 def get_content_items(conn):

@@ -9,7 +9,7 @@ import numpy as np
 import sys
 import os
 import logging
-from database import setup_database, get_searches, get_content_items
+from database import setup_database, get_searches, get_content_items, get_clicked_urls, get_skipped_urls
 from sklearn.model_selection import train_test_split
 from checks import SeriesProperties, DataFrameChecker
 from uncertainty import product_relative_error, ratio_relative_error, sum_error
@@ -126,23 +126,16 @@ class SimplifiedDBNModel:
         Train the model. All input datasets should be indexed by the search ID from the DB.
         """
 
-        # This creates a new row for each element in each clicked_urls list
-        # It is ridiculously slow. Fix this!!!
-        print('Begin magic')
-        clicked_urls = training_set.loc[:, ['clicked_urls', 'search_term_lowercase']]
-        clicked_urls = clicked_urls.set_index('search_term_lowercase').apply(lambda x: x.apply(pd.Series).stack()).reset_index()
-        clicked_urls.drop('level_1', 1)
-        clicked_urls = clicked_urls.rename({'clicked_urls': 'result'}, axis=1)
-        clicked_urls = clicked_urls.groupby(['search_term_lowercase', 'result']).size()
-        print('More magic')
+        # Augment the training set with clicked and skipped urls
+        # this is really hacky but including these in the passed in dataset made things more complicated
+        clicked_urls = get_clicked_urls(conn)
+        skipped_urls = get_skipped_urls(conn)
 
-        # Skipped means they didn't choose it but they examined it
-        skipped_urls = training_set.loc[:, ['skipped_urls', 'search_term_lowercase']]
-        skipped_urls = skipped_urls.set_index('search_term_lowercase').apply(lambda x: x.apply(pd.Series).stack()).reset_index()
-        skipped_urls.drop('level_1', 1)
-        skipped_urls = skipped_urls.rename({'skipped_urls': 'result'}, axis=1)
+        clicked_urls = clicked_urls[clicked_urls.index.isin(training_set.index)]
+        skipped_urls = skipped_urls[skipped_urls.index.isin(training_set.index)]
+
+        clicked_urls = clicked_urls.groupby(['search_term_lowercase', 'result']).size()
         skipped_urls = skipped_urls.groupby(['search_term_lowercase', 'result']).size()
-        print('end magic')
 
         chosen_urls = training_set.groupby(['search_term_lowercase', 'final_click_url']).size()
         chosen_urls.index.names = ['search_term_lowercase', 'result']
