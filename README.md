@@ -9,30 +9,35 @@ More background:
 - [How does GOV.UK search work at the moment](https://matmoore.github.io/accelerator/post/background-govuk-search/)
 - [Predicting search result relevance with a click model](https://matmoore.github.io/accelerator/post/dynamic-bayesian-network-model/)
 
-## Session dataset
-The basic dataset I'm trying to generate has these columns:
+## Data
+For every search session I store these variables:
 
-|Column|Format|Purpose|
+|Variable|Format|Purpose|
 |--|--|--|
-|searchSessionId | String | Uniquely identify a combination of user + search query |
 | searchTerm | String | What the user typed into the search bar |
 | finalItemClicked | UUID or URL | ID of the last thing clicked |
 | finalRank | Integer | Rank of the last thing clicked |
-| clickedResults | Pipe separated string | IDs of everything clicked in the session |
-| unclickedResults | Pipe seperated string | IDs of everything above the last clicked item that wasn't clicked |
+| clickedResults | Array of UUIDs or URLs | IDs of everything clicked in the session |
+| unclickedResults | Array of UUIDs or URLs| IDs of everything above the last clicked item that wasn't clicked |
 
 ## Scripts
-The following scripts produce a dataset using the google analytics API:
-- `pipenv run python ga.py` fetches data 1000 rows at a time and writes each page to a CSV file
-- `pipenv run clean_data_from_api.py [PATH_TO_RAW_DATA] [OUTPUT_PATH]` cleans up the output of `ga.py` and produces a single dataset where each row is a unique combination of (session, query, document)
-- `pipenv run group_session_clicks_from_api_data.py [INPUT_FILE] [OUTPUT_FILE]` groups the data by session and filters out sessions with no clicks
+The following scripts need to be run in extract the data from bigquery, and load it into a local database:
+- `pipenv run python bigquery.py` exports session data from google query
+- `pipenv run clean_data_from_bigquery.py [PATH_TO_RAW_DATA] [OUTPUT_PATH]` cleans up the output of `bigquery.py` and produces a single dataset where each row is a unique combination of (session, query, document)
+- `pipenv run load_sessions.py [INPUT_FILE]` groups the data by session and imports it into a local database
 
 Other scripts:
-- `pipenv run python bigquery.py` fetches data from bigquery (not working yet - see `queries/` for the queries themselves)
-- `pipenv run top_search_terms.py` uses the google analytics API to fetch the top queries, based on the number of clicks on results
+`pipenv run python estimate_relevance.py` trains an SDBN model on the data
 
-## Queries
-The sql in `queries/` is intended to be run against the [Google BigQuery export of the analytics data](https://support.google.com/analytics/answer/3437719?hl=en).
+### Environment variables
 
-- `search_sessions.sql` produces similar data to `ga.py`
-- `sequences.sql` looks at all the pages a user visits after running a search (this is not used)
+These can be set in a `.env` file for local development.
+
+|Variable|Format|Purpose|Default|
+|--|--|--|--|
+| DATABASE_URL | String | which local database to use |postgres://localhost/accelerator|
+| BIGQUERY_PRIVATE_KEY_ID | String | Key id from bigquery credentials ||
+| BIGQUERY_PRIVATE_KEY | SSH key | SSH key from bigquery credentials ||
+| BIGQUERY_CLIENT_EMAIL | Email address | Client email from bigquery credentials ||
+| BIGQUERY_CLIENT_ID | String| Client ID from bigquery credentials ||
+| DEBUG | String| If set to anything, debug the code using part of the dataset ||

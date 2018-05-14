@@ -12,6 +12,7 @@ def sum_error(a_err, b_err, covariance):
     variance = a_err.pow(2) + b_err.pow(2) + 2 * covariance
     return variance.pow(1/2)
 
+
 def ratio_relative_error(num, den, num_err, den_err, covariance):
     """
     Relative error of a ratio

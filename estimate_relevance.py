@@ -300,22 +300,25 @@ if __name__ == '__main__':
     print('Setting up database...')
     conn = setup_database()
 
-    input_filename = sys.argv[1]
-
     df = get_searches(conn)
 
     queries = df.search_term_lowercase.unique()
 
     training_set, test_set = training_and_test(df)
 
+    debug = os.environ.get('DEBUG')
+
     del df
+
+    if debug:
+        print('DEBUG MODE: training one query only')
+        training_set = training_set[training_set.search_term_lowercase == 'self assessment']
+        test_set = test_set[test_set.search_term_lowercase == 'self assessment']
 
     content_items = get_content_items(conn)
 
     model = SimplifiedDBNModel()
-    model.train(
-        training_set
-    )
+    model.train(training_set)
 
     tester = ModelTester(QueryDocumentRanker(model))
     evaluation = tester.evaluate(test_set)
