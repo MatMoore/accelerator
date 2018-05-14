@@ -85,7 +85,7 @@ def insert_session_into_database(search_session, conn, dataset_id):
     conn.execute(stmt)
 
 
-def get_searches(conn, input_filename):
+def get_searches(conn):
     """
     Get a dataframe containing every search and the final thing clicked
     """
@@ -102,9 +102,7 @@ def get_searches(conn, input_filename):
             search_table.c.clicked_urls,
         ]
     ).select_from(
-        search_table.join(dataset_table).join(query_table)
-    ).where(
-        dataset_table.c.filename == input_filename
+        search_table.join(query_table)
     )
 
     df = pd.read_sql(stmt, conn, index_col='id')

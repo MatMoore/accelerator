@@ -297,16 +297,12 @@ class ModelTester:
         return (old_rank - new_rank) * old_rank
 
 if __name__ == '__main__':
-    if len(sys.argv) < 2:
-        print('Usage: python estimate_relevance.py [original input csv]')
-        sys.exit(1)
-
     print('Setting up database...')
     conn = setup_database()
 
     input_filename = sys.argv[1]
 
-    df = get_searches(conn, input_filename)
+    df = get_searches(conn)
 
     queries = df.search_term_lowercase.unique()
 
