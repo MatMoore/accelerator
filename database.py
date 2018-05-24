@@ -17,9 +17,8 @@ search_table = Table('searches', metadata,
     Column('id', BigInteger, primary_key=True),
     Column('query_id', None, ForeignKey('queries.query_id', ondelete='CASCADE')),
     Column('dataset_id', None, ForeignKey('datasets.dataset_id', ondelete='CASCADE')),
-    # TODO store all content ids in rank order
     Column('clicked_urls', ARRAY(String), nullable=False),
-    Column('passed_over_urls', ARRAY(String), nullable=False),
+    Column('all_urls', ARRAY(String), nullable=False),
     Column('final_click_url', String, nullable=False),
     Column('final_click_rank', Integer, nullable=False)
 )
@@ -79,7 +78,7 @@ def insert_session_into_database(search_session, conn, dataset_id):
         query_id=query_id,
         dataset_id=dataset_id,
         clicked_urls=search_session['clickedResults'],
-        passed_over_urls=search_session['passedOverResults'],
+        all_urls=search_session['allResults'],
         final_click_url=search_session['finalItemClicked'],
         final_click_rank=search_session['finalRank']
     )
@@ -98,7 +97,7 @@ def get_searches(conn):
             query_table.c.search_term_lowercase,
 
             # These are arrays
-            search_table.c.passed_over_urls,
+            search_table.c.all_urls,
             search_table.c.clicked_urls,
         ]
     ).select_from(

@@ -65,24 +65,24 @@ def process_session(rank_order, invalid_counter):
     final_url_clicked = final_click_row['contentIdOrPath']
     final_rank = final_click_row['rank']
 
-    passed_over = rank_order[(rank_order.observationType == 'impression') & (rank_order.loc[:, 'rank'] < final_rank)]
+    impressions = rank_order[(rank_order.observationType == 'impression') & (rank_order.loc[:, 'rank'] <= 20)]
 
-    passed_over_ranks = set(passed_over['rank'].tolist())
-    if passed_over_ranks != set(range(1, final_rank)):
+    all_ranks = set(impressions['rank'].tolist())
+    if all_ranks != set(range(1, 20)):
         # Discard session if missing impressions
         logging.info(f'Impression data incomplete for final rank {final_rank}:')
-        logging.info(passed_over_ranks)
+        logging.info(all_ranks)
         invalid_counter['missing_impressions'] += 1
         return None
 
-    passed_over_results = passed_over.contentIdOrPath.tolist()
+    all_results = impressions.contentIdOrPath.tolist()
     clicked_results = clicks.contentIdOrPath.tolist()
 
     session = {
         'searchSessionId': session_id,
         'searchTerm': search_term,
         'finalRank': final_rank.item(),
-        'passedOverResults': passed_over_results,
+        'allResults': all_results,
         'clickedResults': clicked_results,
         'finalItemClicked': final_url_clicked,
     }
