@@ -51,6 +51,7 @@ def process_session(rank_order, invalid_counter):
     This discards any sessions where we don't have any clicks, or we don't
     have impressions for the stuff above the final click.
     """
+    logging.info('session with %d results', len(rank_order))
     clicks = rank_order[rank_order.observationType == 'click']
 
     if not len(clicks):
@@ -62,17 +63,19 @@ def process_session(rank_order, invalid_counter):
     final_click_row = clicks.iloc[0]
 
     search_term = final_click_row['searchTerm']
+    original_search_term = final_click_row['originalSearchTerm']
     final_url_clicked = final_click_row['contentIdOrPath']
     final_rank = final_click_row['rank']
 
-    impressions = rank_order[(rank_order.observationType == 'impression') & (rank_order.loc[:, 'rank'] <= 20)]
+    impressions = rank_order[rank_order.observationType == 'impression']
 
     all_ranks = set(impressions['rank'].tolist())
-    if all_ranks != set(range(1, 20)):
+    if all_ranks != set(range(1, 21)):
         # Discard session if missing impressions
         logging.info(f'Impression data incomplete for final rank {final_rank}:')
         logging.info(all_ranks)
         invalid_counter['missing_impressions'] += 1
+
         return None
 
     all_results = impressions.contentIdOrPath.tolist()
@@ -80,7 +83,8 @@ def process_session(rank_order, invalid_counter):
 
     session = {
         'searchSessionId': session_id,
-        'searchTerm': search_term,
+        'searchTerm': original_search_term,
+        'normalisedSearchTerm': search_term,
         'finalRank': final_rank.item(),
         'allResults': all_results,
         'clickedResults': clicked_results,

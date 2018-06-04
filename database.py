@@ -26,6 +26,7 @@ search_table = Table('searches', metadata,
 query_table = Table('queries', metadata,
     Column('query_id', BigInteger, primary_key=True),
     Column('search_term_lowercase', String, unique=True, nullable=False),
+    Column('normalised_search_term', String, unique=False, nullable=False),
     Column('high_volume', Boolean, default=False)
 )
 
@@ -66,11 +67,11 @@ def insert_session_into_database(search_session, conn, dataset_id):
     Load a session summary into the database
     """
     try:
-        stmt = query_table.insert().values(search_term_lowercase=search_session['searchTerm'])
+        stmt = query_table.insert().values(search_term_lowercase=search_session['searchTerm'], normalised_search_term=search_session['normalisedSearchTerm'])
         result = conn.execute(stmt)
         query_id = result.inserted_primary_key[0]
     except IntegrityError:
-        stmt = select([query_table.c.query_id]).where(query_table.c.search_term_lowercase == search_session['searchTerm'])
+        stmt = select([query_table.c.query_id]).where(query_table.c.search_term_lowercase == search_session['searchTerm']).where(query_table.c.normalised_search_term == search_session['normalisedSearchTerm'])
         result = conn.execute(stmt)
         query_id = result.fetchone()[0]
 
