@@ -79,6 +79,19 @@ def train_model(model, train_session, train_queries):
 
 
 def evaluate_fit(trained_model, test_sessions, test_queries):
+    """
+    Evaluate the model's fit to the observed data - i.e. whether C==0 or C==1 for every
+    item/session.
+
+    There are two measures:
+
+    - Log likelihood goes from negative infinity (bad) to 0 (good)
+    - It measures the likelihood of observing the clicks in all the test sessions if the model is correct
+    - Perplexity goes from 1 (good) to 2 (bad).
+    - It's a measure of how surprised we are about all clicks and non-clicks in all of the test sessions if the model is correct.
+    - When comparing models you can use perplexity gain (pB - pA) / (pB - 1)
+    - It can be computed at individual ranks, or averaged across all ranks. Perplexity is normally higher for higher ranks.
+    """
     print("-------------------------------")
     print("Testing on %d search sessions (%d unique queries)." % (len(test_sessions), len(test_queries)))
     print("-------------------------------")
