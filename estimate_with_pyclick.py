@@ -13,14 +13,15 @@ from split_data import train_test_split
 import time
 import logging
 import pyclick.click_models.Evaluation
-from collections import OrderedDict
+from collections import OrderedDict, Counter
 
 # Override constant for the page size: we show 20 results per page
 # so start by evaluating all of these.
 # TODO: Do we get worse results by incluuding the bottom 10 links?
 pyclick.click_models.Evaluation.RANK_MAX = 20
 
-click_model = SDBN()
+sdbn_click_model = SDBN()
+dbn_click_model = DBN()
 
 
 def load_searches_from_db():
@@ -33,6 +34,7 @@ def map_to_pyclick_format(searches):
     Turn my dataframe into a format that can be processed by PyClick
     """
     sessions = []
+    counter = Counter()
 
     for search in searches.itertuples():
 
@@ -50,9 +52,10 @@ def map_to_pyclick_format(searches):
             # if a session contains more URLs than RANK_MAX. So here we remove any duplicates and then
             # truncate to 20 links.
             unique_links = list(OrderedDict((k, k) for k in search.all_urls).keys())
-            logging.info(f'Truncated multi-view session from {search.all_urls} to {unique_links}')
+            counter['truncated_urls'] += 1
         else:
             unique_links = search.all_urls
+            counter['ok_urls'] += 1
 
         for url in unique_links[:20]:
             if url in search.clicked_urls:
@@ -61,9 +64,10 @@ def map_to_pyclick_format(searches):
                 result = SearchResult(url, 0)
             session.web_results.append(result)
 
-        logging.info(session)
-
         sessions.append(session)
+
+
+    print(counter)
 
     return sessions
 
@@ -75,7 +79,7 @@ def train_model(model, train_session, train_queries):
     start = time.time()
     model.train(train_sessions)
     end = time.time()
-    print("\tTrained %s click model in %i secs:\n%r" % (click_model.__class__.__name__, end - start, click_model))
+    print("\tTrained %s click model in %i secs:\n%r" % (model.__class__.__name__, end - start, model))
 
 
 def evaluate_fit(trained_model, test_sessions, test_queries):
@@ -125,9 +129,13 @@ if __name__ == "__main__":
 
     test_queries = Utils.get_unique_queries(test_sessions)
 
-    train_model(click_model, train_sessions, train_queries)
+    print('SDBN')
+    train_model(sdbn_click_model, train_sessions, train_queries)
+    evaluate_fit(sdbn_click_model, test_sessions, test_queries)
 
-    evaluate_fit(click_model, test_sessions, test_queries)
+    print('DBN')
+    train_model(dbn_click_model, train_sessions, train_queries)
+    evaluate_fit(dbn_click_model, test_sessions, test_queries)
 
     # TODO: evaluate change in rank metrics
     #       and save the actual rankings to compare to the other implementation
