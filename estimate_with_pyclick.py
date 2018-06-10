@@ -14,11 +14,13 @@ import time
 import logging
 import pyclick.click_models.Evaluation
 from collections import OrderedDict, Counter
+import pandas as pd
+from evaluate_model import ModelTester, QueryDocumentRanker
 
 # Override constant for the page size: we show 20 results per page
 # so start by evaluating all of these.
 # TODO: Do we get worse results by incluuding the bottom 10 links?
-pyclick.click_models.Evaluation.RANK_MAX = 20
+pyclick.click_models.Evaluation.RANK_MAX = 10
 
 sdbn_click_model = SDBN()
 dbn_click_model = DBN()
@@ -57,7 +59,7 @@ def map_to_pyclick_format(searches):
             unique_links = search.all_urls
             counter['ok_urls'] += 1
 
-        for url in unique_links[:20]:
+        for url in unique_links[:10]:
             if url in search.clicked_urls:
                 result = SearchResult(url, 1)
             else:
@@ -114,6 +116,15 @@ def evaluate_fit(trained_model, test_sessions, test_queries):
     print("\tperplexity: %f; time: %i secs" % (perp_value, end - start))
 
 
+class ModelAdapter:
+    def __init__(self, model):
+        self.model = model
+
+    def relevance(self, query):
+        documents = self.model.params['attr']._container[query].keys()
+        return pd.Series(self.model.predict_relevance(query, document) for document in documents)
+
+
 if __name__ == "__main__":
     logging.basicConfig(filename='estimate_with_pyclick.log',level=logging.INFO)
 
@@ -133,9 +144,28 @@ if __name__ == "__main__":
     train_model(sdbn_click_model, train_sessions, train_queries)
     evaluate_fit(sdbn_click_model, test_sessions, test_queries)
 
+    with open('sdbn_model.json', 'w') as f:
+        f.write(sdbn_click_model.to_json())
+
+    del sdbn_click_model
+
+    # Create a new ranking based on the trained model
+    # ranker = QueryDocumentRanker(ModelAdapter(sdbn_click_model))
+
+    # # How does the new ranker do against the saved-effort metrics?
+    # tester = ModelTester(ranker)
+    # evaluation = tester.evaluate(test)
+
+    # print(f'Median change in rank: {evaluation.change_in_rank.mean()}')
+    # print(f'Median saved clicks: {evaluation.saved_clicks.median()}')
+
     print('DBN')
     train_model(dbn_click_model, train_sessions, train_queries)
     evaluate_fit(dbn_click_model, test_sessions, test_queries)
+
+    with open('dbn_model.json', 'w') as f:
+        f.write(dbn_click_model.to_json())
+
 
     # TODO: evaluate change in rank metrics
     #       and save the actual rankings to compare to the other implementation
