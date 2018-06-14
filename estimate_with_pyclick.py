@@ -20,7 +20,7 @@ from evaluate_model import ModelTester, QueryDocumentRanker
 # Override constant for the page size: we show 20 results per page
 # so start by evaluating all of these.
 # TODO: Do we get worse results by incluuding the bottom 10 links?
-pyclick.click_models.Evaluation.RANK_MAX = 10
+pyclick.click_models.Evaluation.RANK_MAX = 20
 
 sdbn_click_model = SDBN()
 dbn_click_model = DBN()
@@ -41,6 +41,7 @@ def map_to_pyclick_format(searches):
     for search in searches.itertuples():
 
         query = search.search_term_lowercase
+
         session = TaskCentricSearchSession(query, query)
 
         if len(search.all_urls) != 20:
@@ -59,7 +60,10 @@ def map_to_pyclick_format(searches):
             unique_links = search.all_urls
             counter['ok_urls'] += 1
 
-        for url in unique_links[:10]:
+        for url in unique_links[:20]:
+            if query == 'apprenticeships' and url == '45ad868a-2e79-4029-991b-c29559d7eb29':
+                print('.', end='')
+
             if url in search.clicked_urls:
                 result = SearchResult(url, 1)
             else:
@@ -74,12 +78,13 @@ def map_to_pyclick_format(searches):
     return sessions
 
 
-def train_model(model, train_session, train_queries):
+def train_model(model, train_sessions, train_queries):
     print("===============================")
     print("Training on %d search sessions (%d unique queries)." % (len(train_sessions), len(train_queries)))
     print("===============================")
     start = time.time()
     model.train(train_sessions)
+    print(sdbn_click_model.params[sdbn_click_model.param_names.attr].get('apprenticeships', '45ad868a-2e79-4029-991b-c29559d7eb29')._denominator)
     end = time.time()
     print("\tTrained %s click model in %i secs:\n%r" % (model.__class__.__name__, end - start, model))
 
@@ -135,18 +140,7 @@ if __name__ == "__main__":
     train_model(sdbn_click_model, train_sessions, train_queries)
     evaluate_fit(sdbn_click_model, test_sessions, test_queries)
 
-    with open('sdbn_model.json', 'w') as f:
+    with open('sdbn_model2.json', 'w') as f:
         f.write(sdbn_click_model.to_json())
 
-    del sdbn_click_model
-
-    # print('DBN')
-    # train_model(dbn_click_model, train_sessions, train_queries)
-    # evaluate_fit(dbn_click_model, test_sessions, test_queries)
-
-    # with open('dbn_model.json', 'w') as f:
-    #     f.write(dbn_click_model.to_json())
-
-
-    # TODO: evaluate change in rank metrics
-    #       and save the actual rankings to compare to the other implementation
+    import pdb; pdb.set_trace()
