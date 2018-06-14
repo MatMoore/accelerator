@@ -21,6 +21,7 @@ sklearn = "*"
 scipy = "*"
 pytest = "*"
 nltk = "*"
+pyclick = {git = "https://github.com/MatMoore/PyClick.git"}
 
 
 [dev-packages]
