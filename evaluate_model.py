@@ -169,10 +169,11 @@ if __name__ == '__main__':
     conn = setup_database()
     content_items = get_content_items(conn)
 
-    pyclick_model = PyClickModelAdapter.from_json('data/june10/sdbn_model.json')
+    pyclick_model = PyClickModelAdapter.from_json('data/june10/sdbn_model2.json')
 
-    # NOTE: this comes from an earlier dataset - some queries are different. Should rerun this
-    my_model = SimplifiedDBNModel.from_csv('data/week7/pyclick-comparison/2018-04-26-model-no-uncertainty.csv')
+    # NOTE: this comes from an earlier version of the db because I broke the code
+    # by changing the schema
+    my_model = SimplifiedDBNModel.from_csv('data/june10/my-sdbn_model.csv')
 
     pyclick_ranker = QueryDocumentRanker(pyclick_model)
     my_model_ranker = QueryDocumentRanker(my_model)
@@ -184,10 +185,36 @@ if __name__ == '__main__':
         pyclick_rank = pyclick_ranker.rank(query)
         my_rank = my_model_ranker.rank(query)
 
+        if len(pyclick_rank) == 0:
+            continue
+
+        comparison = []
+        for content_item, rank in my_rank.iteritems():
+            try:
+                title = content_items.loc[content_item].title
+            except Exception:
+                # Titles come from current results, may not be there
+                # for results lower down
+                title = content_item
+
+            print(title)
+
+            try:
+                rank2 = pyclick_rank[content_item]
+                examined = pyclick_model.model.params[pyclick_model.model.param_names.attr].get(query, content_item)._denominator
+            except Exception:
+                rank2 = '?'
+                examined = '?'
+
+            print(f'Mine: {rank}; Pyclick: {rank2}')
+            print(f'Examined: {examined}')
+
+
         df1 = my_rank.to_frame()
         df2 = pyclick_rank.to_frame()
-        results = df1.join(df2, lsuffix='mine', rsuffix='pyclick').join(content_items)
-
+        results = df1.join(df2, lsuffix='mine', rsuffix='pyclick', how='outer').join(content_items)
+        results.to_csv(f'data/june10/queries/{query}.csv', index=False)
+        import pdb; pdb.set_trace()
 
 
     # # How does the new ranker do against the saved-effort metrics?
