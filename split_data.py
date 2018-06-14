@@ -25,5 +25,6 @@ def training_and_test(df):
 
     training_set = pd.concat(train)
     test_set = pd.concat(test)
+    import pdb; pdb.set_trace()
 
     return training_set, test_set

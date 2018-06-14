@@ -143,4 +143,13 @@ if __name__ == "__main__":
     with open('sdbn_model2.json', 'w') as f:
         f.write(sdbn_click_model.to_json())
 
+    from evaluate_model import PyClickModelAdapter, QueryDocumentRanker
+
+    ranker = QueryDocumentRanker(PyClickModelAdapter(sdbn_click_model))
+    tester = ModelTester(ranker)
+    evaluation = tester.evaluate(test)
+
+    print(f'Mean change in rank: {evaluation.change_in_rank.mean()}')
+    print(f'Mean saved clicks: {evaluation.saved_clicks.mean()}')
+
     import pdb; pdb.set_trace()
