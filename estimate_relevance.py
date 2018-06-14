@@ -10,31 +10,12 @@ import sys
 import os
 import logging
 from database import setup_database, get_searches, get_content_items, get_clicked_urls, get_skipped_urls
-from sklearn.model_selection import train_test_split
+from split_data import training_and_test
 from checks import SeriesProperties, DataFrameChecker
 from uncertainty import product_relative_error, ratio_relative_error, sum_error
 from clean_data_from_bigquery import normalise_search_terms
-from evaluate_model import QueryDocumentRanker, ModelTester
 
 logging.basicConfig(filename='estimate_relevance.log',level=logging.INFO)
-
-
-def training_and_test(df):
-    """
-    Split training and test data for each query
-    """
-    train = []
-    test = []
-    for query in queries:
-        query_data = df[df.search_term_lowercase == query]
-        query_train, query_test = train_test_split(query_data, test_size=0.25)
-        train.append(query_train)
-        test.append(query_test)
-
-    training_set = pd.concat(train)
-    test_set = pd.concat(test)
-
-    return training_set, test_set
 
 
 def calculate_examined(documents):
@@ -122,11 +103,21 @@ def calculate_relevance(documents):
 
 
 class SimplifiedDBNModel:
+    @staticmethod
+    def from_csv(doc_params_csv_file):
+        doc_params = pd.read_csv(doc_params_csv_file, index_col=['search_term_lowercase', 'result'])
+        return SimplifiedDBNModel(doc_params)
+
+    def to_csv(self, csv_file, **kwargs):
+        self.document_params.to_csv(csv_file, **kwargs)
+
+    def __init__(self, document_params=None):
+        self.document_params = document_params
+
     def train(self, training_set):
         """
         Train the model. All input datasets should be indexed by the search ID from the DB.
         """
-
         # Augment the training set with clicked and skipped urls
         # this is really hacky but including these in the passed in dataset made things more complicated
         clicked_urls = get_clicked_urls(conn)
@@ -172,10 +163,21 @@ class SimplifiedDBNModel:
         """
         Calculate the relevance of all documents that have been returned by a query
         """
-        return self.document_params.loc[query].relevance_low.sort_values(ascending=False)
+        if self.document_params is None:
+            # This class is a mess, sorry
+            raise Exception('Untrained model')
+
+        try:
+            return self.document_params.loc[query].relevance_low.sort_values(ascending=False)
+        except AttributeError:
+            # HACK: older CSV files I created didn't precompute the relevance
+            return self.document_params.loc[query].attractiveness.multiply(self.document_params.loc[query].satisfyingness).sort_values(ascending=False)
 
 
 if __name__ == '__main__':
+    # This is a mess of circular dependencies
+    from evaluate_model import QueryDocumentRanker, ModelTester
+
     print('Setting up database...')
     conn = setup_database()
 
@@ -202,17 +204,4 @@ if __name__ == '__main__':
     model = SimplifiedDBNModel()
     model.train(training_set)
 
-    print('Evaluating')
-    tester = ModelTester(QueryDocumentRanker(model))
-    evaluation = tester.evaluate(test_set)
-
-    print(f'Median change in rank: {evaluation.change_in_rank.mean()}')
-    print(f'Median saved clicks: {evaluation.saved_clicks.median()}')
-
-    ranker = QueryDocumentRanker(model)
-    example = model.document_params.loc['self assessment'].join(content_items).sort_values('relevance_low', ascending=False)
-
-    evaluation.to_csv('data/week7/pyclick-comparison/2018-04-26-test_set-uncertainty2.csv')
-    model.document_params.to_csv('data/week7/pyclick-comparison/2018-04-26-model-uncertainty2.csv')
-
-    import pdb; pdb.set_trace()
+    model.to_csv('data/june10/my-sdbn_model.csv')

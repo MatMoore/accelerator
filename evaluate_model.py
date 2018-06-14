@@ -14,8 +14,38 @@ from sklearn.model_selection import train_test_split
 from checks import SeriesProperties, DataFrameChecker
 from uncertainty import product_relative_error, ratio_relative_error, sum_error
 from clean_data_from_bigquery import normalise_search_terms
+from estimate_relevance import SimplifiedDBNModel
+from pyclick.click_models import SDBN
 
 logging.basicConfig(filename='estimate_relevance.log',level=logging.INFO)
+
+
+class PyClickModelAdapter:
+    """
+    Takes a pyclick model and wraps it in a class that can calculate
+    relevance estimates from the model's params.
+    """
+    @staticmethod
+    def from_json(json_file):
+        model = SDBN()
+        with open(json_file) as f:
+            json_str = f.read()
+        model.from_json(json_str)
+        return PyClickModelAdapter(model)
+
+    def __init__(self, model):
+        self.model = model
+
+    def relevance(self, query):
+        attr_param = self.model.param_names.attr
+        documents = self.model.params[attr_param]._container[query].keys()
+        return self.predict_relevance(query, documents)
+
+    def predict_relevance(self, query, documents):
+        return pd.Series(
+            (self.model.predict_relevance(query, document) for document in documents),
+            index=documents
+        ).sort_values(ascending=False)
 
 
 class QueryDocumentRanker:
@@ -132,4 +162,37 @@ class ModelTester:
             # really saying anything about its new rank. So just ignore it.
             return 0
 
-        return (old_rank - new_rank) * old_rank
+        return (old_rank - new_rank)
+
+
+if __name__ == '__main__':
+    conn = setup_database()
+    content_items = get_content_items(conn)
+
+    pyclick_model = PyClickModelAdapter.from_json('data/june10/sdbn_model.json')
+
+    # NOTE: this comes from an earlier dataset - some queries are different. Should rerun this
+    my_model = SimplifiedDBNModel.from_csv('data/week7/pyclick-comparison/2018-04-26-model-no-uncertainty.csv')
+
+    pyclick_ranker = QueryDocumentRanker(pyclick_model)
+    my_model_ranker = QueryDocumentRanker(my_model)
+
+    queries = my_model.document_params.index.get_level_values(0).unique()
+    print(f'loaded {len(queries)} queries')
+
+    for query in queries:
+        pyclick_rank = pyclick_ranker.rank(query)
+        my_rank = my_model_ranker.rank(query)
+
+        df1 = my_rank.to_frame()
+        df2 = pyclick_rank.to_frame()
+        results = df1.join(df2, lsuffix='mine', rsuffix='pyclick').join(content_items)
+
+
+
+    # # How does the new ranker do against the saved-effort metrics?
+    # tester = ModelTester(ranker)
+    # evaluation = tester.evaluate(test)
+
+    # print(f'Median change in rank: {evaluation.change_in_rank.mean()}')
+    # print(f'Median saved clicks: {evaluation.saved_clicks.median()}')

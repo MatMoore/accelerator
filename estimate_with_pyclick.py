@@ -116,15 +116,6 @@ def evaluate_fit(trained_model, test_sessions, test_queries):
     print("\tperplexity: %f; time: %i secs" % (perp_value, end - start))
 
 
-class ModelAdapter:
-    def __init__(self, model):
-        self.model = model
-
-    def relevance(self, query):
-        documents = self.model.params['attr']._container[query].keys()
-        return pd.Series(self.model.predict_relevance(query, document) for document in documents)
-
-
 if __name__ == "__main__":
     logging.basicConfig(filename='estimate_with_pyclick.log',level=logging.INFO)
 
@@ -149,22 +140,12 @@ if __name__ == "__main__":
 
     del sdbn_click_model
 
-    # Create a new ranking based on the trained model
-    # ranker = QueryDocumentRanker(ModelAdapter(sdbn_click_model))
+    # print('DBN')
+    # train_model(dbn_click_model, train_sessions, train_queries)
+    # evaluate_fit(dbn_click_model, test_sessions, test_queries)
 
-    # # How does the new ranker do against the saved-effort metrics?
-    # tester = ModelTester(ranker)
-    # evaluation = tester.evaluate(test)
-
-    # print(f'Median change in rank: {evaluation.change_in_rank.mean()}')
-    # print(f'Median saved clicks: {evaluation.saved_clicks.median()}')
-
-    print('DBN')
-    train_model(dbn_click_model, train_sessions, train_queries)
-    evaluate_fit(dbn_click_model, test_sessions, test_queries)
-
-    with open('dbn_model.json', 'w') as f:
-        f.write(dbn_click_model.to_json())
+    # with open('dbn_model.json', 'w') as f:
+    #     f.write(dbn_click_model.to_json())
 
 
     # TODO: evaluate change in rank metrics
