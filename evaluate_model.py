@@ -39,6 +39,11 @@ class PyClickModelAdapter:
     def relevance(self, query):
         attr_param = self.model.param_names.attr
         documents = self.model.params[attr_param]._container[query].keys()
+
+        # Filter out any document that has been examined less than 10 times
+        # I could do this earlier on, but this might mess up some of the sessions and test data
+        documents = [d for d in documents if self.model.params[attr_param]._container[query][d]._denominator >= 10]
+
         return self.predict_relevance(query, documents)
 
     def predict_relevance(self, query, documents):
@@ -142,11 +147,6 @@ class ModelTester:
         - More of the tests set have seen the results closer to the top
         - Less of the test set have seen the results closer to the bottom
         - The distribution of final clicks is biased by this
-
-        To counteract this, weight improvements higher if the original
-        rank was higher.
-
-        TODO: does this make any sense?
         """
         query = test_row.search_term_lowercase
         new_ranking = self.ranker.rank(query)
