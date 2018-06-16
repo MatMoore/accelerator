@@ -8,8 +8,7 @@ from pyclick.click_models.SDBN import SDBN
 from pyclick.utils.Utils import Utils
 from pyclick.click_models.task_centric.TaskCentricSearchSession import TaskCentricSearchSession
 from pyclick.search_session.SearchResult import SearchResult
-from database import get_searches, setup_database
-from split_data import train_test_split
+from split_data import load_from_csv
 import time
 import logging
 import pyclick.click_models.Evaluation
@@ -24,11 +23,6 @@ pyclick.click_models.Evaluation.RANK_MAX = 20
 
 sdbn_click_model = SDBN()
 dbn_click_model = DBN()
-
-
-def load_searches_from_db():
-    conn = setup_database()
-    return get_searches(conn)
 
 
 def map_to_pyclick_format(searches):
@@ -61,9 +55,6 @@ def map_to_pyclick_format(searches):
             counter['ok_urls'] += 1
 
         for url in unique_links[:20]:
-            if query == 'apprenticeships' and url == '45ad868a-2e79-4029-991b-c29559d7eb29':
-                print('.', end='')
-
             if url in search.clicked_urls:
                 result = SearchResult(url, 1)
             else:
@@ -124,8 +115,7 @@ def evaluate_fit(trained_model, test_sessions, test_queries):
 if __name__ == "__main__":
     logging.basicConfig(filename='estimate_with_pyclick.log',level=logging.INFO)
 
-    searches = load_searches_from_db()
-    training, test = train_test_split(searches)
+    training, test = load_from_csv()
     train_sessions = map_to_pyclick_format(training)
     test_sessions = map_to_pyclick_format(test)
     train_queries = Utils.get_unique_queries(train_sessions)
@@ -140,7 +130,7 @@ if __name__ == "__main__":
     train_model(sdbn_click_model, train_sessions, train_queries)
     evaluate_fit(sdbn_click_model, test_sessions, test_queries)
 
-    with open('sdbn_model2.json', 'w') as f:
+    with open('sdbn_model.json', 'w') as f:
         f.write(sdbn_click_model.to_json())
 
     from evaluate_model import PyClickModelAdapter, QueryDocumentRanker
