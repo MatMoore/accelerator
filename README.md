@@ -27,7 +27,9 @@ The following scripts need to be run in extract the data from bigquery, and load
 - `pipenv run load_sessions.py [INPUT_FILE]` groups the data by session and imports it into a local database
 
 Other scripts:
-`pipenv run python estimate_relevance.py` trains an SDBN model on the data
+- `pipenv run split_data.py` creates training/test datasets
+- `pipenv run python estimate_relevance.py` trains an SDBN model on the data
+- `pipenv run python estimate_with_pyclick.py` uses PyClick to train an SDBN model
 
 ### Environment variables
 
