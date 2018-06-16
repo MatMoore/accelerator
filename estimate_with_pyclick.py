@@ -154,6 +154,14 @@ if __name__ == "__main__":
     evaluation = tester.evaluate(test)
 
     print(f'Mean change in rank: {evaluation.change_in_rank.mean()}')
-    print(f'Mean saved clicks: {evaluation.saved_clicks.mean()}')
+
+    improved = sum(evaluation.change_in_rank > 0)
+    worsened = sum(evaluation.change_in_rank < 0)
+    no_change = sum(evaluation.change_in_rank == 0)
+    print(f'Improved sessions: {improved}')
+    print(f'Worsened sessions: {worsened}')
+    print(f'No change sessions: {no_change}')
+
+    #print(f'Mean saved clicks: {evaluation.saved_clicks.mean()}')
 
     debug(sdbn_click_model, 'apprenticeships')
