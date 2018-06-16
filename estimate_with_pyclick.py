@@ -15,6 +15,7 @@ import pyclick.click_models.Evaluation
 from collections import OrderedDict, Counter
 import pandas as pd
 from evaluate_model import ModelTester, QueryDocumentRanker
+from debug import expand_content_ids
 
 # Override constant for the page size: we show 20 results per page
 # so start by evaluating all of these.
@@ -112,6 +113,19 @@ def evaluate_fit(trained_model, test_sessions, test_queries):
     print("\tperplexity: %f; time: %i secs" % (perp_value, end - start))
 
 
+def debug(model, query):
+    """
+    Print out model params for each result ordered by the model's ranking
+    """
+    ranker = QueryDocumentRanker(PyClickModelAdapter(model))
+    df = expand_content_ids(ranker.rank(query).to_frame()).sort_values(0)
+    for idx, row in df.iterrows():
+        a = sdbn_click_model.params[sdbn_click_model.param_names.attr].get(query, idx)
+        s = sdbn_click_model.params[sdbn_click_model.param_names.sat].get(query, idx)
+        n = sdbn_click_model.params[sdbn_click_model.param_names.attr]._container[query][idx]._denominator
+        print(f'a={a} s={s}, n={n}: {idx} ({row["title"]})')
+
+
 if __name__ == "__main__":
     logging.basicConfig(filename='estimate_with_pyclick.log',level=logging.INFO)
 
@@ -142,4 +156,4 @@ if __name__ == "__main__":
     print(f'Mean change in rank: {evaluation.change_in_rank.mean()}')
     print(f'Mean saved clicks: {evaluation.saved_clicks.mean()}')
 
-    import pdb; pdb.set_trace()
+    debug(sdbn_click_model, 'apprenticeships')
