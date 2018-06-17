@@ -38,7 +38,7 @@ def session_data(input_data, session_map, session_id):
     Return the clicks and impressions for a single session, highest rank first
     """
     indexes = session_map[session_id]
-    rank_order = input_data.loc[indexes].sort_values(by=['rank'], ascending=False)
+    rank_order = input_data.loc[indexes].sort_values(by=['rank'], ascending=True)
     return rank_order
 
 
@@ -60,7 +60,7 @@ def process_session(rank_order, invalid_counter):
         invalid_counter['no_clicks'] += 1
         return None
 
-    final_click_row = clicks.iloc[0]
+    final_click_row = clicks.iloc[-1]
 
     search_term = final_click_row['searchTerm']
     original_search_term = final_click_row['originalSearchTerm']
