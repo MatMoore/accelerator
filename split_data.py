@@ -29,7 +29,6 @@ def training_and_test(df):
 
     training_set = pd.concat(train)
     test_set = pd.concat(test)
-    import pdb; pdb.set_trace()
 
     return training_set, test_set
 
@@ -52,6 +51,7 @@ if __name__ == '__main__':
     """
     conn = setup_database()
     searches = get_searches(conn)
+
     training, test = train_test_split(searches)
 
     print(f'split into {len(training)} training rows and {len(test)} test rows')
