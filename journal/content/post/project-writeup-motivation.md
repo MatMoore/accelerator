@@ -20,7 +20,7 @@ But it turned out that the spreadsheet-based tool wasn't very useful, and A/B te
 
 # What could we do differently?
 
-I considered two ways of getting of feedback: editoral judgements and implicit feedback. That said, there are some methods that fall somewhere in the middle of these two approaches, like asking users to rate individual searches. This is a good example from amazon:
+I considered two ways of getting feedback: editoral judgements and implicit feedback. That said, there are some methods that fall somewhere in the middle of these two approaches, like asking users to rate individual searches. This is a good example from amazon:
 
 ![Feedback on amazon.co.uk: users are asked "did you find what you were looking for?"](/images/amazon-feedback.png)
 
