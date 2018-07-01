@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en-gb">
+
+  <head>
+    <meta charset="utf-8">
+    <meta name="generator" content="Hugo 0.37.1" />
+
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="author" content="">
+    <meta property="og:url" content="https://matmoore.github.io/accelerator/post/project-writeup-motivation/">
+
+    <title>Building a tool to benchmark search: Motivation - Accelerator project journal</title>
+    <meta property="og:title" content="Building a tool to benchmark search: Motivation - Accelerator project journal">
+    <meta property="og:type" content="article">
+    <meta name="description" content="">
+
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Code+Pro|Arvo:400,700">
+    <link rel="stylesheet" href="../../css/highlight.css">
+    <link rel="stylesheet" href="../../css/journal.css">
+    <link href="../../index.xml" rel="alternate" type="application/rss+xml" title="Accelerator project journal">
+
+  </head>
+
+  <body>
+    <div class="container">
+
+      <nav class="site-nav">
+        <a href="https://matmoore.github.io/accelerator/">Index</a>
+      </nav>
+
+  <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+  </script>
+  <article class="post">
+    <header class="post-header">
+      <h1 class="post-title">Building a tool to benchmark search: Motivation <span class="tag">Week -1</span></h1>
+      <time class="post-date" datetime="2018-07-01 19:00:00 BST">01 Jul 2018</time>
+
+    </header>
+    
+
+<p>This is the first in a series of blog posts about what I worked on for my data science accelerator project at <a href="https://www.gov.uk/government/organisations/government-digital-service">GDS</a>.</p>
+
+<h1 id="recap-why-did-i-propose-this-project">Recap: why did I propose this project?</h1>
+
+<p>GOV.UK is all about joining up goverment services and information so users can find stuff and understand goverment. This is hard because the government is not a single entity - it&rsquo;s a bunch of separate departments and agencies with different priorties, responsibilities and ways of working.</p>
+
+<p>GOV.UK offers a big search bar on every page. But a lot of the time it works embarassingly badly. Like when you search for a named document like &ldquo;single departmental plan&rdquo; and the page you want is the <a href="https://twitter.com/pubstrat/status/1007204503303675908">20th result</a>. Users expect stuff like this to just work, and <a href="https://definitionofdigital.com/">we should do better</a>.</p>
+
+<p>Last year I was technical lead of the search team, and I came to appreciate that good search is really hard to get right. We had a ton of ideas for modifying the <a href="../../post/background-govuk-search">various factors</a> that affect the ranking of documents in search results, but no reliable way of testing what works well and judging what&rsquo;s worth spending time on. That team got wound down in January, and I had a lot of time to reflect on what could be done differently and what would enable future teams to be more productive.</p>
+
+<p>We&rsquo;d invested time in <a href="https://docs.publishing.service.gov.uk/manual/ab-testing.html#header">infrastructure for A/B testing</a>, and manually compiling a big spreadsheet of query/document pairs to check before releasing changes. We had a tool to run through the spreadsheet queries and check which ones actually got returned in the top N results.</p>
+
+<p>But it turned out that the spreadsheet-based tool wasn&rsquo;t very useful, and A/B testing everything was prohibitively slow. Even for a 1 line code change, it took over a week to determine whether we&rsquo;d made any measurable difference to the overall user experience. For me, this was an unacceptably long feedback cycle, and I thought that we could do a much better job if we could shorten that feedback loop.</p>
+
+<h1 id="what-could-we-do-differently">What could we do differently?</h1>
+
+<p>I considered two ways of getting of feedback: editoral judgements and implicit feedback. That said, there are some methods that fall somewhere in the middle of these two approaches, like asking users to rate individual searches. This is a good example from amazon:</p>
+
+<p><img src="../../images/amazon-feedback.png" alt="Feedback on amazon.co.uk: users are asked &quot;did you find what you were looking for?&quot;" /></p>
+
+<p>&ldquo;Editoral judgements&rdquo; means getting people to look at search results and rate how good or bad each one is. The people rating the results could be subject matter experts, or actual users participating in surveys. But either way, doing this at scale is expensive. You can&rsquo;t just do it once, because content changes a lot over time, and the things people search for change as well, influenced by changes in government policy.</p>
+
+<p>&ldquo;Implicit feedback&rdquo; means learning from what users actually do instead of what they tell us - this was appealing to me because it&rsquo;s comparatively easy to scale up, and we were already collecting the data.</p>
+
+<h1 id="problem-statement">Problem statement</h1>
+
+<p>So this led me to the problem statement:</p>
+
+<blockquote>
+<p>Given what people click on now, can we predict whether a new search implementation will make the user experience better or worse, for a sample set of real search queries?</p>
+</blockquote>
+
+<h1 id="data-we-store">Data we store</h1>
+
+<p>Since last year we&rsquo;ve been storing search result &ldquo;impressions&rdquo; (which documents were shown to a user), and individual clicks as events in Google Analytics.</p>
+
+<p>This data should have also been exported to Google BigQuery so we can export large datasets, but it turns out we forgot to click a button. Doh. This changed the scope of my project somewhat, as I had to work with data I gathered after starting the project instead of a full year&rsquo;s worth of data. Lesson learned: check datasets as early as possible.</p>
+
+<p>I only looked at search terms that had been used in at least 1000 sessions, so I ended up with a dataset containing the top 127 search terms, and about 400,000 sessions. This doesn&rsquo;t represent all users very well, since there is a lot of variation in what people search for, and this ignores the &ldquo;long tail&rdquo; of queries that get searched less often. But it was a start.</p>
+
+<h1 id="click-models">Click models</h1>
+
+<p>The simplest thing to do with this data would be to just count up the number of clicks for each result, and assume that the most clicked results are the most relevant to users.</p>
+
+<p>This is problematic in practice, since users are much more likely to click stuff higher up on a search result page, regardless of whether it&rsquo;s good enough (&ldquo;position bias&rdquo;). In general, users assume the search engine is going to do its job and rank better things higher up, and only users who are very uncomfortable with technology will spend a lot of time scrolling through results before clicking something or abandoning the page.</p>
+
+<p>Thankfully people have come up with lots of different models to try and understand user behaviour from what users clicked on.</p>
+
+<p>For my project I used a model called the <a href="../../post/dynamic-bayesian-network-model">Dynamic Bayesian Network model</a> (specifically, the <em>Simplified</em> Dyanmic Bayesian Network model, which adds in one more assumption to simplify the maths).</p>
+
+<p>Basically this model has 2 hidden variables for each search result: how likely a document is to be clicked if it was shown in position 1, and how useful it is to a user that&rsquo;s clicked it. You can use statistical methods to infer these from the click data.</p>
+
+<p>The picture below shows how these variables get adjusted based on observing a session where the first and third result were clicked. You learn something about the clicked documents themselves, but you also learn about the unclicked documents that the user would have had to have seen to click something lower down.</p>
+
+<p><img src="../../images/dbn-inference.png" alt="Diagram of the inference process. Clicking a result increases the attractiveness of that document, and decreases the attractiveness of any unclicked documents above it. If it was the last clicked item, the usefulness goes up, otherwise it goes down" /></p>
+
+<h1 id="summary">Summary</h1>
+
+<p>This post has covered the motivation for the project and the data and model I used.</p>
+
+<p>In the next part I&rsquo;ll explain more about what I built (and what I didn&rsquo;t have time for).</p>
+
+
+  </article>
+
+
+      <footer class="site-footer">
+        <span itemscope itemtype="http://schema.org/Person">
+          <link itemprop="url" href="https://matmoore.github.io/accelerator/">
+          <span itemprop="name"></span>
+
+          <br>
+
+          
+
+          
+
+          
+        </span>
+
+        
+      </footer>
+    </div>
+
+  <script src="../../js/highlight.pack.js"></script>
+  <script>hljs.initHighlightingOnLoad();</script>
+
+  </body>
+</html>
+

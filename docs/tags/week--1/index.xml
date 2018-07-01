@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Week  1 on Accelerator project journal</title>
+    <link>https://matmoore.github.io/accelerator/tags/week--1/</link>
+    <description>Recent content in Week  1 on Accelerator project journal</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-gb</language>
+    <lastBuildDate>Sun, 01 Jul 2018 19:00:00 +0100</lastBuildDate>
+    
+	<atom:link href="https://matmoore.github.io/accelerator/tags/week--1/index.xml" rel="self" type="application/rss+xml" />
+    
+    
+    <item>
+      <title>Building a tool to benchmark search: Motivation</title>
+      <link>https://matmoore.github.io/accelerator/post/project-writeup-motivation/</link>
+      <pubDate>Sun, 01 Jul 2018 19:00:00 +0100</pubDate>
+      
+      <guid>https://matmoore.github.io/accelerator/post/project-writeup-motivation/</guid>
+      <description>This is the first in a series of blog posts about what I worked on for my data science accelerator project at GDS.
+Recap: why did I propose this project? GOV.UK is all about joining up goverment services and information so users can find stuff and understand goverment. This is hard because the government is not a single entity - it&amp;rsquo;s a bunch of separate departments and agencies with different priorties, responsibilities and ways of working.</description>
+    </item>
+    
+    <item>
+      <title>Wrapping up the project</title>
+      <link>https://matmoore.github.io/accelerator/post/wrapping-up/</link>
+      <pubDate>Sun, 01 Jul 2018 17:12:41 +0100</pubDate>
+      
+      <guid>https://matmoore.github.io/accelerator/post/wrapping-up/</guid>
+      <description>Last week was the final week of the project, so this is where I wrap up.
+I had intended to blog all the way through the project, but I gave up somewhere in the middle after hitting some roadblocks and losing motivation. I was quite busy with other things at the time so I wanted to keep more of my evenings and weekends free.
+I didn&amp;rsquo;t stop writing things down, but I stuck to notetaking instead of blogging.</description>
+    </item>
+    
+  </channel>
+</rss>

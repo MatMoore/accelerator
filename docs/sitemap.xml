@@ -3,6 +3,16 @@
   xmlns:xhtml="http://www.w3.org/1999/xhtml">
   
   <url>
+    <loc>https://matmoore.github.io/accelerator/post/project-writeup-motivation/</loc>
+    <lastmod>2018-07-01T19:00:00+01:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>https://matmoore.github.io/accelerator/post/wrapping-up/</loc>
+    <lastmod>2018-07-01T17:12:41+01:00</lastmod>
+  </url>
+  
+  <url>
     <loc>https://matmoore.github.io/accelerator/post/mid-point-plan/</loc>
     <lastmod>2018-04-22T09:00:01+00:00</lastmod>
   </url>
@@ -44,18 +54,24 @@
   
   <url>
     <loc>https://matmoore.github.io/accelerator/</loc>
-    <lastmod>2018-04-22T09:00:01+00:00</lastmod>
+    <lastmod>2018-07-01T19:00:00+01:00</lastmod>
     <priority>0</priority>
   </url>
   
   <url>
     <loc>https://matmoore.github.io/accelerator/post/</loc>
-    <lastmod>2018-04-22T09:00:01+00:00</lastmod>
+    <lastmod>2018-07-01T19:00:00+01:00</lastmod>
     <priority>0</priority>
   </url>
   
   <url>
     <loc>https://matmoore.github.io/accelerator/tags/</loc>
+    <priority>0</priority>
+  </url>
+  
+  <url>
+    <loc>https://matmoore.github.io/accelerator/tags/week--1/</loc>
+    <lastmod>2018-07-01T19:00:00+01:00</lastmod>
     <priority>0</priority>
   </url>
   
