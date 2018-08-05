@@ -14,4 +14,4 @@ I didn't stop writing things down, but I stuck to notetaking instead of blogging
 In the final week I had to give a presentation on what I'd done over the course of the data science accelerator, and I'm going to attempt to convert that into a series of blog posts. So in the next couple of posts I'll try and explain what I accomplished through the project, what I learned, and what I didn't finish.
 
 - [Part 1 - Motivation](/post/project-writeup-motivation)
-- Part 2 - Results and ideas for future work
+- [Part 2 - Results and lessons learnt](/post/project-writeup-lessons-learnt)
