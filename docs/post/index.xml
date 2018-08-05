@@ -6,10 +6,21 @@
     <description>Recent content in Posts on Accelerator project journal</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en-gb</language>
-    <lastBuildDate>Sun, 01 Jul 2018 19:00:00 +0100</lastBuildDate>
+    <lastBuildDate>Sun, 05 Aug 2018 13:00:00 +0100</lastBuildDate>
     
 	<atom:link href="https://matmoore.github.io/accelerator/post/index.xml" rel="self" type="application/rss+xml" />
     
+    
+    <item>
+      <title>Building a tool to benchmark search: Results and lessons learnt</title>
+      <link>https://matmoore.github.io/accelerator/post/project-writeup-lessons-learnt/</link>
+      <pubDate>Sun, 05 Aug 2018 13:00:00 +0100</pubDate>
+      
+      <guid>https://matmoore.github.io/accelerator/post/project-writeup-lessons-learnt/</guid>
+      <description>This is the second in a series of blog posts about what I worked on for my data science accelerator project at GDS. It follows part 1: motivation.
+What I built During the 11? 12? days of the programme, I built a data pipeline that fitted a simplified dynamic bayesian network model to my data about search clicks.
+As I alluded to in the previous post, this model allows me to estimate the probability of a document being relevant to users who entered a certain search term.</description>
+    </item>
     
     <item>
       <title>Building a tool to benchmark search: Motivation</title>
