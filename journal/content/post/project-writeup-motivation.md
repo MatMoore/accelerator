@@ -58,4 +58,4 @@ The picture below shows how these variables get adjusted based on observing a se
 # Summary
 This post has covered the motivation for the project and the data and model I used.
 
-In the next part I'll explain more about what I built (and what I didn't have time for).
+In [part 2: results and lessons learnt](/post/project-writeup-lessons-learnt), I'll explain more about what I built (and what I didn't have time for).
